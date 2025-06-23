@@ -79,7 +79,13 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
             });
 
             if (produkty) {
-                setWybraneProdukty(produkty as AppBridgeProduct[]);
+                setWybraneProdukty((currentProducts) => {
+                    const currentIds = new Set(currentProducts.map((p) => p.id));
+                    const newProducts = (produkty as AppBridgeProduct[]).filter(
+                        (p) => !currentIds.has(p.id)
+                    );
+                    return [...currentProducts, ...newProducts];
+                });
             }
         } catch (error) {
             console.error("ResourcePicker error:", error);
@@ -136,7 +142,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                         <Text variant="headingMd" as="h2">
                             Product Preview
                         </Text>
-                        <Button onClick={handleProductSelection}>Choose products</Button>
+                        <Button onClick={handleProductSelection}>Add Products</Button>
                     </InlineStack>
 
                     {wybraneProdukty.length > 0 && (
