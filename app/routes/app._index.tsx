@@ -21,7 +21,7 @@ import { TypBody } from "../types/ZasadyGeneratora";
 // Import naszych komponentów
 import { KartaPodstawowychZasad } from "../components/KartaPodstawowychZasad";
 import { KartaUstawienBody } from "../components/KartaUstawienBody";
-import { KartaDodatkowychKomponentow } from "../components/KartaDodatkowychKomponentow";
+import { KartaUkladuSKU } from "../components/KartaUkladuSKU";
 import { PodgladSKU } from "../components/PodgladSKU";
 import { BannerPlanSzturmowiec } from "../components/BannerPlanSzturmowiec";
 import { PrzyciskGenerowania } from "../components/PrzyciskGenerowania";
@@ -156,7 +156,7 @@ export default function Index() {
             <BannerPlanSzturmowiec />
             <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
-            <KartaDodatkowychKomponentow zasady={zasady} aktualizuj={aktualizujZasady} />
+            <KartaUkladuSKU zasady={zasady} aktualizuj={aktualizujZasady} />
           </BlockStack>
         </Layout.Section>
 

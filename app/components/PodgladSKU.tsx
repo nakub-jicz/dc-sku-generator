@@ -1,4 +1,4 @@
-import { Card, BlockStack, Text, InlineStack, Badge, Divider } from "@shopify/polaris";
+import { Card, BlockStack, Text, InlineStack, Badge } from "@shopify/polaris";
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 
 interface PodgladSKUProps {
@@ -12,7 +12,7 @@ interface PodgladSKUProps {
  * To jest nasz system wczesnego ostrzegania - użytkownik widzi rezultat przed generowaniem.
  * 
  * TAKTYKA: Symulujemy generowanie SKU z przykładowymi danymi produktu.
- * Każda część SKU jest wizualnie oddzielona i opisana.
+ * Każda część SKU jest wizualnie oddzielona i opisana, zgodnie z ukladSKU.
  */
 export function PodgladSKU({ zasady }: PodgladSKUProps) {
     // Przykładowe dane produktu do symulacji
@@ -27,24 +27,6 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
         opcja3: "Bawełna",
         idProduktu: "123456789",
         idWariantu: "987654321",
-    };
-
-    // Generowanie body na podstawie typu
-    const generujBody = (): string => {
-        switch (zasady.typBody) {
-            case "consecutive":
-                return zasady.poczatekNumeracji.toString();
-            case "product_id":
-                return przykladoweDane.idProduktu;
-            case "variant_id":
-                return przykladoweDane.idWariantu;
-            case "random":
-                return Math.floor(Math.random() * 1000).toString();
-            case "disable_body":
-                return "";
-            default:
-                return "1";
-        }
     };
 
     // Mapowanie typów komponentów na wartości
@@ -67,54 +49,43 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
             case "variant_option3":
                 return przykladoweDane.opcja3;
             default:
-                return "N/A";
+                return "";
         }
     };
 
-    // Budowanie części SKU
-    const czesciSKU: Array<{ id: string; wartosc: string; typ: string; opis: string }> = [];
+    const getWartoscById = (id: string): { wartosc: string, opis: string, typBadge: "success" | "info" | "warning" | "critical" } => {
+        switch (id) {
+            case "prefix":
+                return { wartosc: zasady.prefix, opis: "Prefix", typBadge: "success" };
+            case "sufix":
+                return { wartosc: zasady.sufix, opis: "Sufix", typBadge: "success" };
+            case "body": {
+                let wartosc;
+                switch (zasady.typBody) {
+                    case "consecutive": wartosc = zasady.poczatekNumeracji.toString(); break;
+                    case "product_id": wartosc = przykladoweDane.idProduktu; break;
+                    case "variant_id": wartosc = przykladoweDane.idWariantu; break;
+                    case "random": wartosc = Math.floor(Math.random() * 1000).toString(); break;
+                    default: wartosc = "";
+                }
+                return { wartosc, opis: "Główna część", typBadge: "info" };
+            }
+            default: {
+                const komponent = zasady.dodatkoweKomponenty.find(k => k.id === id);
+                if (!komponent) return { wartosc: "", opis: "", typBadge: "critical" };
+                return {
+                    wartosc: getWartoscKomponentu(komponent.typ),
+                    opis: komponent.typ.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                    typBadge: "warning"
+                };
+            }
+        }
+    };
 
-    // Prefix
-    if (zasady.prefix) {
-        czesciSKU.push({
-            id: "prefix",
-            wartosc: zasady.prefix,
-            typ: "prefix",
-            opis: "Prefix"
-        });
-    }
-
-    // Body
-    const bodyWartosc = generujBody();
-    if (bodyWartosc) {
-        czesciSKU.push({
-            id: "body",
-            wartosc: bodyWartosc,
-            typ: "body",
-            opis: "Główna część"
-        });
-    }
-
-    // Dodatkowe komponenty
-    zasady.dodatkoweKomponenty.forEach((komponent) => {
-        const wartosc = getWartoscKomponentu(komponent.typ);
-        czesciSKU.push({
-            id: komponent.id,
-            wartosc: wartosc,
-            typ: "dodatkowy",
-            opis: komponent.typ.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-        });
-    });
-
-    // Sufix
-    if (zasady.sufix) {
-        czesciSKU.push({
-            id: "sufix",
-            wartosc: zasady.sufix,
-            typ: "sufix",
-            opis: "Sufix"
-        });
-    }
+    // Budowanie części SKU na podstawie ukladSKU
+    const czesciSKU = zasady.ukladSKU
+        .map(id => ({ id, ...getWartoscById(id) }))
+        .filter(czesc => czesc.wartosc);
 
     // Finalne SKU
     const finalneSKU = czesciSKU.map(czesc => czesc.wartosc).join(zasady.separator);
@@ -152,7 +123,7 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
                             <InlineStack gap="100" wrap>
                                 {czesciSKU.map((czesc, index) => (
                                     <InlineStack key={czesc.id} gap="100" align="center">
-                                        <Badge tone={czesc.typ === 'prefix' ? 'success' : czesc.typ === 'body' ? 'info' : 'warning'}>
+                                        <Badge tone={czesc.typBadge}>
                                             {czesc.opis}
                                         </Badge>
                                         <span style={{ fontFamily: 'monospace' }}>
