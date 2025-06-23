@@ -11,6 +11,7 @@ import {
     Checkbox,
 } from "@shopify/polaris";
 import { DeleteIcon } from "@shopify/polaris-icons";
+import styles from './PodgladProduktow.module.css';
 
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 import { generujPojedynczeSKU } from "../services/generatorSKU";
@@ -100,13 +101,22 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
         );
     };
 
-    const handleRemoveVariant = (variantId: string) => {
-        setWybraneProdukty((currentProducts) =>
-            currentProducts.map((product) => ({
-                ...product,
-                variants: product.variants.filter((v) => v.id !== variantId),
-            }))
-        );
+    const handleRemoveVariant = (productId: string, variantId: string) => {
+        setWybraneProdukty(prev => {
+            return prev.reduce<AppBridgeProduct[]>((acc, product) => {
+                if (product.id !== productId) {
+                    acc.push(product);
+                } else {
+                    const newVariants = product.variants.filter(v => v.id !== variantId);
+                    if (newVariants.length > 0) {
+                        acc.push({ ...product, variants: newVariants });
+                    }
+                    // jeśli newVariants.length === 0, nie dodawaj produktu do acc (usuń produkt)
+                }
+                return acc;
+            }, []);
+        });
+        setSelectedVariants(prev => prev.filter(id => id !== variantId));
     };
 
     const allVariants = wybraneProdukty.flatMap((product) =>
@@ -167,28 +177,30 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
         // Nagłówek produktu z własnym checkboxem
         flatIndex++;
         const productRow = (
-            <IndexTable.Row key={product.id} id={product.id} position={flatIndex} onClick={() => handleProductCheckbox(product, !allSelected)}>
-                <IndexTable.Cell colSpan={4}>
-                    <div style={{ display: 'flex', alignItems: 'center', fontWeight: 600, background: '#fafbfc', borderRadius: 4, padding: '0.5rem 0.75rem', margin: '0.25rem 0' }}>
-                        <span style={{ marginRight: '1rem' }} onClick={e => e.stopPropagation()}>
-                            <Checkbox
-                                checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
-                                onChange={checked => handleProductCheckbox(product, checked)}
-                                label={product.title}
-                                labelHidden
-                            />
-                        </span>
-                        <span style={{ flex: 1 }}>{product.title}</span>
-                        <span onClick={e => e.stopPropagation()}>
-                            <Button
-                                variant="plain"
-                                tone="critical"
-                                icon={DeleteIcon}
-                                onClick={() => handleRemoveProduct(product.id)}
-                                accessibilityLabel={`Remove product ${product.title}`}
-                            >Usuń produkt</Button>
-                        </span>
-                    </div>
+            <IndexTable.Row key={product.id} id={product.id} position={flatIndex} onClick={() => handleProductCheckbox(product, !allSelected)} data-row-selected={allSelected}>
+                <IndexTable.Cell>
+                    <span style={{ marginRight: '1rem' }} onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                            checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
+                            onChange={checked => handleProductCheckbox(product, checked)}
+                            label=""
+                            labelHidden
+                        />
+                    </span>
+                    <span style={{ flex: 1 }}>{product.title}</span>
+                </IndexTable.Cell>
+                <IndexTable.Cell />
+                <IndexTable.Cell />
+                <IndexTable.Cell>
+                    <span onClick={e => e.stopPropagation()}>
+                        <Button
+                            variant="plain"
+                            tone="critical"
+                            icon={DeleteIcon}
+                            onClick={() => handleRemoveProduct(product.id)}
+                            accessibilityLabel={`Remove product ${product.title}`}
+                        >Usuń produkt</Button>
+                    </span>
                 </IndexTable.Cell>
             </IndexTable.Row>
         );
@@ -197,7 +209,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
             flatIndex++;
             const isChecked = selectedVariants.includes(variant.id);
             return (
-                <IndexTable.Row key={variant.id} id={variant.id} position={flatIndex} selected={isChecked} onClick={() => handleVariantCheckbox(variant.id, !isChecked)}>
+                <IndexTable.Row key={variant.id} id={variant.id} position={flatIndex} selected={isChecked} onClick={() => handleVariantCheckbox(variant.id, !isChecked)} data-row-selected={isChecked}>
                     <IndexTable.Cell>
                         <div style={{ paddingLeft: '2.5rem', display: 'flex', alignItems: 'center' }}>
                             <span onClick={e => e.stopPropagation()}>
@@ -230,7 +242,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                                 variant="plain"
                                 tone="critical"
                                 icon={DeleteIcon}
-                                onClick={() => handleRemoveVariant(variant.id)}
+                                onClick={() => handleRemoveVariant(product.id, variant.id)}
                                 accessibilityLabel={`Remove variant ${variant.title}`}
                             />
                         </span>
