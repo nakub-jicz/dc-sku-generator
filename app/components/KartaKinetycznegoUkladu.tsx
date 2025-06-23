@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Reorder, useMotionValue } from "framer-motion";
 import {
     Card,
@@ -65,6 +65,9 @@ function ReorderableItem({ id, zasady, aktualizuj }: { id: string; zasady: Zasad
 
 export function KartaKinetycznegoUkladu({ zasady, aktualizuj }: KartaKinetycznegoUkladuProps) {
     const [uklad, setUklad] = useState<string[]>(zasady.ukladSKU);
+    useEffect(() => {
+        setUklad(zasady.ukladSKU);
+    }, [zasady.ukladSKU]);
 
     // Dostępne typy komponentów do dodania
     const opcjeKomponentow: { typ: DodatkowyKomponentTyp; id: string }[] = [
