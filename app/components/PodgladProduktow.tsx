@@ -92,6 +92,12 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
         }
     };
 
+    const handleRemoveProduct = (productId: string) => {
+        setWybraneProdukty((currentProducts) =>
+            currentProducts.filter((p) => p.id !== productId)
+        );
+    };
+
     const allVariants = wybraneProdukty.flatMap((product) =>
         product.variants.map((variant) => ({
             ...variant,
@@ -108,8 +114,11 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
     const { selectedResources, allResourcesSelected, handleSelectionChange } =
         useIndexResourceState(allVariants.map(v => ({ ...v, media: undefined })));
 
-    const rowMarkup = allVariants.map(
-        (wariant, index) => (
+    const rowMarkup = allVariants.map((wariant, index) => {
+        const isFirstVariantOfProduct =
+            index === 0 || allVariants[index - 1].product.id !== wariant.product.id;
+
+        return (
             <IndexTable.Row
                 id={wariant.id}
                 key={wariant.id}
@@ -117,17 +126,35 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                 position={index}
             >
                 <IndexTable.Cell>
-                    <Text variant="bodyMd" fontWeight="bold" as="span">
-                        {wariant.product.title} - {wariant.title}
-                    </Text>
+                    {isFirstVariantOfProduct && (
+                        <Text variant="bodyMd" fontWeight="bold" as="p">
+                            {wariant.product.title}
+                        </Text>
+                    )}
+                    <div style={{ paddingLeft: "20px" }}>
+                        <Text as="span" tone="subdued">
+                            {wariant.title}
+                        </Text>
+                    </div>
                 </IndexTable.Cell>
                 <IndexTable.Cell>{wariant.sku || "No SKU"}</IndexTable.Cell>
                 <IndexTable.Cell>
                     {generujPojedynczeSKU(zasady, wariant, index)}
                 </IndexTable.Cell>
+                <IndexTable.Cell>
+                    {isFirstVariantOfProduct && (
+                        <Button
+                            variant="plain"
+                            tone="critical"
+                            onClick={() => handleRemoveProduct(wariant.product.id)}
+                        >
+                            Remove
+                        </Button>
+                    )}
+                </IndexTable.Cell>
             </IndexTable.Row>
-        )
-    );
+        );
+    });
 
     const wybraneWariantyDoZapisu = allVariants.filter(v => selectedResources.includes(v.id));
 
@@ -157,6 +184,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                                 { title: "Product" },
                                 { title: "Current SKU" },
                                 { title: "New SKU" },
+                                { title: "Actions" },
                             ]}
                         >
                             {rowMarkup}
