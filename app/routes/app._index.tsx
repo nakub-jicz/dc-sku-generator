@@ -17,13 +17,13 @@ import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 import { TypBody } from "../types/ZasadyGeneratora";
+import styles from "./_index/styles.module.css";
 
 // Import naszych komponentów
 import { KartaPodstawowychZasad } from "../components/KartaPodstawowychZasad";
 import { KartaUstawienBody } from "../components/KartaUstawienBody";
 import { KartaUkladuSKU } from "../components/KartaUkladuSKU";
 import { PodgladSKU } from "../components/PodgladSKU";
-import { BannerPlanSzturmowiec } from "../components/BannerPlanSzturmowiec";
 import { PrzyciskGenerowania } from "../components/PrzyciskGenerowania";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -150,27 +150,26 @@ export default function Index() {
     <Page fullWidth>
       <TitleBar title="Generator SKU" />
 
-      <Layout>
-        <Layout.Section>
+      <div className={styles.layoutContainer}>
+        {/* Main content area - left side */}
+        <div className={styles.mainContent}>
           <BlockStack gap="500">
-            <BannerPlanSzturmowiec />
             <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUkladuSKU zasady={zasady} aktualizuj={aktualizujZasady} />
-          </BlockStack>
-        </Layout.Section>
-
-        <Layout.Section>
-          <BlockStack gap="500">
-            <PodgladSKU zasady={zasady} />
             <PrzyciskGenerowania
               zasady={zasady}
               onGeneruj={handleGeneruj}
               isLoading={isLoading}
             />
           </BlockStack>
-        </Layout.Section>
-      </Layout>
+        </div>
+
+        {/* Sticky sidebar - right side */}
+        <div className={styles.sidebar}>
+          <PodgladSKU zasady={zasady} />
+        </div>
+      </div>
     </Page>
   );
 }

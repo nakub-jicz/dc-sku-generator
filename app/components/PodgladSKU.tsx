@@ -1,4 +1,5 @@
-import { Card, BlockStack, Text, InlineStack, Badge } from "@shopify/polaris";
+import { Card, BlockStack, Text, InlineStack, Badge, Divider, Icon } from "@shopify/polaris";
+import { ViewIcon } from "@shopify/polaris-icons";
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 
 interface PodgladSKUProps {
@@ -93,52 +94,109 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
     return (
         <Card>
             <BlockStack gap="400">
-                <Text variant="headingMd" as="h2">
-                    Podgląd SKU
-                </Text>
+                {/* Header with icon */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 'var(--p-space-200)'
+                }}>
+                    <Text variant="headingMd" as="h2">
+                        Live Preview
+                    </Text>
+                </div>
 
+                <Divider />
+
+                {/* Final SKU Display */}
                 <BlockStack gap="300">
-                    <Text variant="bodyMd" as="p">
-                        Oto jak będzie wyglądać Twoje SKU na podstawie aktualnych ustawień:
+                    <Text variant="bodyMd" as="p" tone="subdued">
+                        Preview of your SKU based on current settings:
                     </Text>
 
-                    {/* Finalne SKU */}
-                    <Card background="bg-surface-secondary">
+                    <Card background="bg-surface-secondary" padding="400">
                         <BlockStack gap="200">
-                            <Text variant="bodyMd" as="p" fontWeight="semibold">
-                                Wygenerowane SKU:
+                            <Text variant="bodyMd" as="p" fontWeight="semibold" tone="subdued">
+                                Generated SKU:
                             </Text>
-                            <p style={{ fontFamily: 'monospace', fontSize: '1.5rem', margin: 0 }}>
-                                {finalneSKU || "Brak danych"}
-                            </p>
+                            <div style={{
+                                fontFamily: 'monospace',
+                                fontSize: '1.25rem',
+                                fontWeight: 500,
+                                color: 'var(--p-text-primary)',
+                                backgroundColor: 'var(--p-surface)',
+                                padding: '0.75rem',
+                                borderRadius: 'var(--p-border-radius-200)',
+                                border: '1px solid var(--p-border-subdued)',
+                                wordBreak: 'break-all'
+                            }}>
+                                {finalneSKU || "No data available"}
+                            </div>
                         </BlockStack>
                     </Card>
+                </BlockStack>
 
-                    {/* Struktura SKU */}
-                    {czesciSKU.length > 0 && (
-                        <BlockStack gap="200">
+                {/* SKU Structure Breakdown */}
+                {czesciSKU.length > 0 && (
+                    <>
+                        <Divider />
+                        <BlockStack gap="300">
                             <Text variant="bodyMd" as="p" fontWeight="semibold">
-                                Struktura:
+                                Structure breakdown:
                             </Text>
-                            <InlineStack gap="100" wrap>
+                            <BlockStack gap="200">
                                 {czesciSKU.map((czesc, index) => (
-                                    <InlineStack key={czesc.id} gap="100" align="center">
-                                        <Badge tone={czesc.typBadge}>
-                                            {czesc.opis}
-                                        </Badge>
-                                        <span style={{ fontFamily: 'monospace' }}>
-                                            {czesc.wartosc}
-                                        </span>
+                                    <div key={czesc.id}>
+                                        <InlineStack gap="200" align="center">
+                                            <Badge tone={czesc.typBadge} size="small">
+                                                {czesc.opis}
+                                            </Badge>
+                                            <span style={{
+                                                fontFamily: 'monospace',
+                                                fontWeight: '500',
+                                                fontSize: 'var(--p-font-size-300)'
+                                            }}>
+                                                {czesc.wartosc}
+                                            </span>
+                                        </InlineStack>
                                         {index < czesciSKU.length - 1 && zasady.separator && (
-                                            <Text variant="bodyMd" as="span" tone="subdued">
+                                            <div style={{
+                                                textAlign: 'center',
+                                                margin: '0.5rem 0',
+                                                color: 'var(--p-text-subdued)',
+                                                fontSize: '0.875rem'
+                                            }}>
                                                 {zasady.separator}
-                                            </Text>
+                                            </div>
                                         )}
-                                    </InlineStack>
+                                    </div>
                                 ))}
-                            </InlineStack>
+                            </BlockStack>
                         </BlockStack>
-                    )}
+                    </>
+                )}
+
+                {/* Configuration Summary */}
+                <Divider />
+                <BlockStack gap="200">
+                    <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        Configuration:
+                    </Text>
+                    <InlineStack gap="200" wrap>
+                        <Badge tone="info" size="small">
+                            {`Separator: "${zasady.separator}"`}
+                        </Badge>
+                        {zasady.prefix && (
+                            <Badge tone="success" size="small">
+                                {`Prefix: "${zasady.prefix}"`}
+                            </Badge>
+                        )}
+                        {zasady.sufix && (
+                            <Badge tone="success" size="small">
+                                {`Suffix: "${zasady.sufix}"`}
+                            </Badge>
+                        )}
+                    </InlineStack>
                 </BlockStack>
             </BlockStack>
         </Card>

@@ -57,7 +57,7 @@
   gap: 2rem;
 }
 
-.list > li {
+.list>li {
   max-width: 20rem;
   text-align: left;
 }
@@ -67,7 +67,41 @@
     display: block;
   }
 
-  .list > li {
+  .list>li {
     padding-bottom: 1rem;
+  }
+}
+
+.layoutContainer {
+  display: flex;
+  gap: 1rem;
+  min-height: calc(100vh - 120px);
+  position: relative;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.sidebar {
+  width: 100%;
+  flex-shrink: 0;
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+/* Desktop layout - sidebar on the right */
+@media (min-width: 1024px) {
+  .layoutContainer {
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 400px;
   }
 }
