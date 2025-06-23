@@ -3,7 +3,7 @@
 client_id = "63a90b4861df9c446f00454b3de19a2a"
 name = "DC SKU Generator"
 handle = "dc-sku-generator"
-application_url = "https://divorce-ld-vsnet-interior.trycloudflare.com"
+application_url = "https://analysis-labels-sleeve-stamp.trycloudflare.com"
 embedded = true
 
 [build]
@@ -27,9 +27,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://divorce-ld-vsnet-interior.trycloudflare.com/auth/callback",
-  "https://divorce-ld-vsnet-interior.trycloudflare.com/auth/shopify/callback",
-  "https://divorce-ld-vsnet-interior.trycloudflare.com/api/auth/callback"
+  "https://analysis-labels-sleeve-stamp.trycloudflare.com/auth/callback",
+  "https://analysis-labels-sleeve-stamp.trycloudflare.com/auth/shopify/callback",
+  "https://analysis-labels-sleeve-stamp.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
