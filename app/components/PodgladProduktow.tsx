@@ -167,10 +167,10 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
         // Nagłówek produktu z własnym checkboxem
         flatIndex++;
         const productRow = (
-            <IndexTable.Row key={product.id} id={product.id} position={flatIndex}>
+            <IndexTable.Row key={product.id} id={product.id} position={flatIndex} onClick={() => handleProductCheckbox(product, !allSelected)}>
                 <IndexTable.Cell colSpan={4}>
                     <div style={{ display: 'flex', alignItems: 'center', fontWeight: 600, background: '#fafbfc', borderRadius: 4, padding: '0.5rem 0.75rem', margin: '0.25rem 0' }}>
-                        <span style={{ marginRight: '1rem' }}>
+                        <span style={{ marginRight: '1rem' }} onClick={e => e.stopPropagation()}>
                             <Checkbox
                                 checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
                                 onChange={checked => handleProductCheckbox(product, checked)}
@@ -179,13 +179,15 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                             />
                         </span>
                         <span style={{ flex: 1 }}>{product.title}</span>
-                        <Button
-                            variant="plain"
-                            tone="critical"
-                            icon={DeleteIcon}
-                            onClick={() => handleRemoveProduct(product.id)}
-                            accessibilityLabel={`Remove product ${product.title}`}
-                        >Usuń produkt</Button>
+                        <span onClick={e => e.stopPropagation()}>
+                            <Button
+                                variant="plain"
+                                tone="critical"
+                                icon={DeleteIcon}
+                                onClick={() => handleRemoveProduct(product.id)}
+                                accessibilityLabel={`Remove product ${product.title}`}
+                            >Usuń produkt</Button>
+                        </span>
                     </div>
                 </IndexTable.Cell>
             </IndexTable.Row>
@@ -193,16 +195,19 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
         // Warianty pod produktem
         const variantRows = product.variants.map((variant) => {
             flatIndex++;
+            const isChecked = selectedVariants.includes(variant.id);
             return (
-                <IndexTable.Row key={variant.id} id={variant.id} position={flatIndex} selected={selectedVariants.includes(variant.id)}>
+                <IndexTable.Row key={variant.id} id={variant.id} position={flatIndex} selected={isChecked} onClick={() => handleVariantCheckbox(variant.id, !isChecked)}>
                     <IndexTable.Cell>
                         <div style={{ paddingLeft: '2.5rem', display: 'flex', alignItems: 'center' }}>
-                            <Checkbox
-                                checked={selectedVariants.includes(variant.id)}
-                                onChange={checked => handleVariantCheckbox(variant.id, checked)}
-                                label={variant.title}
-                                labelHidden
-                            />
+                            <span onClick={e => e.stopPropagation()}>
+                                <Checkbox
+                                    checked={isChecked}
+                                    onChange={checked => handleVariantCheckbox(variant.id, checked)}
+                                    label={variant.title}
+                                    labelHidden
+                                />
+                            </span>
                             <span style={{ marginLeft: '0.75rem', color: '#666' }}>{variant.title}</span>
                         </div>
                     </IndexTable.Cell>
@@ -220,13 +225,15 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                         }, flatIndex)}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                        <Button
-                            variant="plain"
-                            tone="critical"
-                            icon={DeleteIcon}
-                            onClick={() => handleRemoveVariant(variant.id)}
-                            accessibilityLabel={`Remove variant ${variant.title}`}
-                        />
+                        <span onClick={e => e.stopPropagation()}>
+                            <Button
+                                variant="plain"
+                                tone="critical"
+                                icon={DeleteIcon}
+                                onClick={() => handleRemoveVariant(variant.id)}
+                                accessibilityLabel={`Remove variant ${variant.title}`}
+                            />
+                        </span>
                     </IndexTable.Cell>
                 </IndexTable.Row>
             );
