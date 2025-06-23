@@ -51,9 +51,14 @@ function ReorderableItem({ id, zasady, aktualizuj }: { id: string; zasady: Zasad
                     <Icon source={DragHandleIcon} tone="base" />
                     <Text as="span" variant="bodyMd" fontWeight="semibold">
                         {(() => {
-                            if (nazwyKomponentow[id]) return nazwyKomponentow[id];
-                            const typ = id.split('_')[0];
-                            return nazwyKomponentow[typ] || typ;
+                            const parts = id.split('_');
+                            let typ = parts.length > 2 ? parts.slice(0, 2).join('_') : parts[0];
+                            let label = nazwyKomponentow[typ];
+                            if (!label && parts.length > 1) {
+                                // Fallback: spróbuj ostatni segment (np. option1, vendor)
+                                label = nazwyKomponentow[parts[parts.length - 2]] || nazwyKomponentow[parts[parts.length - 1]];
+                            }
+                            return label || typ;
                         })()}
                     </Text>
                     {isRemovable && <Button variant="plain" icon={XIcon} onClick={handleRemove} />}
