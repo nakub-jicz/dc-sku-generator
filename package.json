@@ -23,9 +23,6 @@
     "node": "^18.20 || ^20.10 || >=21.0.0"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^6.2.1",
     "@remix-run/dev": "^2.16.1",
     "@remix-run/fs-routes": "^2.16.1",
@@ -36,6 +33,7 @@
     "@shopify/polaris": "^12.0.0",
     "@shopify/shopify-app-remix": "^3.7.0",
     "@shopify/shopify-app-session-storage-prisma": "^6.0.0",
+    "framer-motion": "^12.19.1",
     "isbot": "^5.1.0",
     "prisma": "^6.2.1",
     "react": "^18.2.0",

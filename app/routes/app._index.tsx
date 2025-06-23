@@ -22,9 +22,9 @@ import styles from "./_index/styles.module.css";
 // Import naszych komponentów
 import { KartaPodstawowychZasad } from "../components/KartaPodstawowychZasad";
 import { KartaUstawienBody } from "../components/KartaUstawienBody";
-import { KartaUkladuSKU } from "../components/KartaUkladuSKU";
 import { PodgladSKU } from "../components/PodgladSKU";
 import { PodgladProduktow } from "../components/PodgladProduktow";
+import { KartaKinetycznegoUkladu } from "../components/KartaKinetycznegoUkladu";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -156,7 +156,7 @@ export default function Index() {
           <BlockStack gap="500">
             <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
-            <KartaUkladuSKU zasady={zasady} aktualizuj={aktualizujZasady} />
+            <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
             <PodgladProduktow zasady={zasady} />
           </BlockStack>
         </div>
