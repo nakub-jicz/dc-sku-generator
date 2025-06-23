@@ -24,7 +24,7 @@ import { KartaPodstawowychZasad } from "../components/KartaPodstawowychZasad";
 import { KartaUstawienBody } from "../components/KartaUstawienBody";
 import { KartaUkladuSKU } from "../components/KartaUkladuSKU";
 import { PodgladSKU } from "../components/PodgladSKU";
-import { PrzyciskGenerowania } from "../components/PrzyciskGenerowania";
+import { PodgladProduktow } from "../components/PodgladProduktow";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -148,7 +148,7 @@ export default function Index() {
 
   return (
     <Page fullWidth>
-      <TitleBar title="Generator SKU" />
+      <TitleBar title="SKU Generator" />
 
       <div className={styles.layoutContainer}>
         {/* Main content area - left side */}
@@ -157,11 +157,7 @@ export default function Index() {
             <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
             <KartaUkladuSKU zasady={zasady} aktualizuj={aktualizujZasady} />
-            <PrzyciskGenerowania
-              zasady={zasady}
-              onGeneruj={handleGeneruj}
-              isLoading={isLoading}
-            />
+            <PodgladProduktow zasady={zasady} />
           </BlockStack>
         </div>
 

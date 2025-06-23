@@ -56,23 +56,23 @@ function SortableItem({
 
     const getLabelForId = (itemId: string): string => {
         if (itemId === "prefix") return "Prefix";
-        if (itemId === "body") return "Główna część";
-        if (itemId === "sufix") return "Sufix";
+        if (itemId === "body") return "Main Body";
+        if (itemId === "sufix") return "Suffix";
         const komponent = zasady.dodatkoweKomponenty.find(k => k.id === itemId);
-        if (!komponent) return "Nieznany komponent";
+        if (!komponent) return "Unknown Component";
 
         const opcjeKomponentow = [
-            { label: "Nazwa produktu", value: DodatkowyKomponentTyp.NAZWA_PRODUKTU },
-            { label: "Nazwa wariantu", value: DodatkowyKomponentTyp.NAZWA_WARIANTU },
-            { label: "Dostawca", value: DodatkowyKomponentTyp.DOSTAWCA },
-            { label: "Typ produktu", value: DodatkowyKomponentTyp.TYP_PRODUKTU },
-            { label: "Stare SKU", value: DodatkowyKomponentTyp.STARE_SKU },
-            { label: "Opcja 1", value: DodatkowyKomponentTyp.OPCJA_1 },
-            { label: "Opcja 2", value: DodatkowyKomponentTyp.OPCJA_2 },
-            { label: "Opcja 3", value: DodatkowyKomponentTyp.OPCJA_3 },
+            { label: "Product Name", value: DodatkowyKomponentTyp.NAZWA_PRODUKTU },
+            { label: "Variant Name", value: DodatkowyKomponentTyp.NAZWA_WARIANTU },
+            { label: "Vendor", value: DodatkowyKomponentTyp.DOSTAWCA },
+            { label: "Product Type", value: DodatkowyKomponentTyp.TYP_PRODUKTU },
+            { label: "Old SKU", value: DodatkowyKomponentTyp.STARE_SKU },
+            { label: "Option 1", value: DodatkowyKomponentTyp.OPCJA_1 },
+            { label: "Option 2", value: DodatkowyKomponentTyp.OPCJA_2 },
+            { label: "Option 3", value: DodatkowyKomponentTyp.OPCJA_3 },
         ];
         const opcja = opcjeKomponentow.find(o => o.value === komponent.typ);
-        return opcja ? opcja.label : "Nieznany komponent";
+        return opcja ? opcja.label : "Unknown Component";
     };
 
     const isCoreComponent = ["prefix", "body", "sufix"].includes(id);
@@ -93,7 +93,7 @@ function SortableItem({
                             variant="plain"
                             icon={DeleteIcon}
                             onClick={() => onRemove(id)}
-                            accessibilityLabel="Usuń komponent"
+                            accessibilityLabel="Remove component"
                         />
                     )}
                 </InlineStack>
@@ -119,14 +119,14 @@ export function KartaUkladuSKU({ zasady, aktualizuj }: KartaUkladuSKUProps) {
     const [selectedComponent, setSelectedComponent] = useState("");
 
     const opcjeKomponentow = [
-        { label: "Nazwa produktu", value: DodatkowyKomponentTyp.NAZWA_PRODUKTU },
-        { label: "Nazwa wariantu", value: DodatkowyKomponentTyp.NAZWA_WARIANTU },
-        { label: "Dostawca", value: DodatkowyKomponentTyp.DOSTAWCA },
-        { label: "Typ produktu", value: DodatkowyKomponentTyp.TYP_PRODUKTU },
-        { label: "Stare SKU", value: DodatkowyKomponentTyp.STARE_SKU },
-        { label: "Opcja 1", value: DodatkowyKomponentTyp.OPCJA_1 },
-        { label: "Opcja 2", value: DodatkowyKomponentTyp.OPCJA_2 },
-        { label: "Opcja 3", value: DodatkowyKomponentTyp.OPCJA_3 },
+        { label: "Product Name", value: DodatkowyKomponentTyp.NAZWA_PRODUKTU },
+        { label: "Variant Name", value: DodatkowyKomponentTyp.NAZWA_WARIANTU },
+        { label: "Vendor", value: DodatkowyKomponentTyp.DOSTAWCA },
+        { label: "Product Type", value: DodatkowyKomponentTyp.TYP_PRODUKTU },
+        { label: "Old SKU", value: DodatkowyKomponentTyp.STARE_SKU },
+        { label: "Option 1", value: DodatkowyKomponentTyp.OPCJA_1 },
+        { label: "Option 2", value: DodatkowyKomponentTyp.OPCJA_2 },
+        { label: "Option 3", value: DodatkowyKomponentTyp.OPCJA_3 },
     ];
 
     const uzyteTypy = zasady.dodatkoweKomponenty.map(k => k.typ);
@@ -184,11 +184,11 @@ export function KartaUkladuSKU({ zasady, aktualizuj }: KartaUkladuSKUProps) {
                 <InlineStack gap="200" blockAlign="end">
                     <div style={{ flexGrow: 1 }}>
                         <Select
-                            label="Dodaj komponent"
+                            label="Add component"
                             options={dostepneOpcje}
                             value={selectedComponent}
                             onChange={setSelectedComponent}
-                            placeholder="Wybierz komponent do dodania"
+                            placeholder="Select a component to add"
                             disabled={dostepneOpcje.length === 0}
                         />
                     </div>
@@ -197,7 +197,7 @@ export function KartaUkladuSKU({ zasady, aktualizuj }: KartaUkladuSKUProps) {
                         onClick={dodajKomponent}
                         disabled={!selectedComponent}
                     >
-                        Dodaj
+                        Add
                     </Button>
                 </InlineStack>
 

@@ -18,14 +18,14 @@ interface PodgladSKUProps {
 export function PodgladSKU({ zasady }: PodgladSKUProps) {
     // Przykładowe dane produktu do symulacji
     const przykladoweDane = {
-        nazwaProduktu: "Koszulka Bawełniana",
-        nazwaWariantu: "Czerwona / M",
+        nazwaProduktu: "Cotton T-Shirt",
+        nazwaWariantu: "Red / M",
         dostawca: "FashionCorp",
-        typProduktu: "Odzież",
+        typProduktu: "Apparel",
         stareSKU: "OLD-SKU-123",
-        opcja1: "Czerwona",
+        opcja1: "Red",
         opcja2: "M",
-        opcja3: "Bawełna",
+        opcja3: "Cotton",
         idProduktu: "123456789",
         idWariantu: "987654321",
     };
@@ -59,7 +59,7 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
             case "prefix":
                 return { wartosc: zasady.prefix, opis: "Prefix", typBadge: "success" };
             case "sufix":
-                return { wartosc: zasady.sufix, opis: "Sufix", typBadge: "success" };
+                return { wartosc: zasady.sufix, opis: "Suffix", typBadge: "success" };
             case "body": {
                 let wartosc;
                 switch (zasady.typBody) {
@@ -69,7 +69,7 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
                     case "random": wartosc = Math.floor(Math.random() * 1000).toString(); break;
                     default: wartosc = "";
                 }
-                return { wartosc, opis: "Główna część", typBadge: "info" };
+                return { wartosc, opis: "Main Body", typBadge: "info" };
             }
             default: {
                 const komponent = zasady.dodatkoweKomponenty.find(k => k.id === id);

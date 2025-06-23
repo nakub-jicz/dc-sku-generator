@@ -20,7 +20,7 @@ export function KartaPodstawowychZasad({ zasady, aktualizuj }: KartaPodstawowych
     return (
         <Card>
             <Text variant="headingMd" as="h2">
-                Podstawowe ustawienia SKU
+                Core SKU Settings
             </Text>
 
             <InlineGrid columns={3} gap="400">
@@ -28,27 +28,27 @@ export function KartaPodstawowychZasad({ zasady, aktualizuj }: KartaPodstawowych
                     label="Prefix"
                     value={zasady.prefix}
                     onChange={(value) => aktualizuj({ prefix: value })}
-                    helpText="Tekst na początku każdego SKU (np. 'SKU', 'PROD')"
+                    helpText="Text at the beginning of each SKU (e.g., 'SKU', 'PROD')"
                     autoComplete="off"
                 />
 
                 <TextField
-                    label="Początek numeracji"
+                    label="Starting Number"
                     type="number"
                     value={zasady.poczatekNumeracji.toString()}
                     onChange={(value) => {
                         const numValue = parseInt(value) || 1;
                         aktualizuj({ poczatekNumeracji: numValue });
                     }}
-                    helpText="Od jakiego numeru zacząć (np. 1, 100, 1000)"
+                    helpText="Which number to start from (e.g., 1, 100, 1000)"
                     autoComplete="off"
                 />
 
                 <TextField
-                    label="Sufix"
+                    label="Suffix"
                     value={zasady.sufix}
                     onChange={(value) => aktualizuj({ sufix: value })}
-                    helpText="Tekst na końcu każdego SKU (np. 'END', '2024')"
+                    helpText="Text at the end of each SKU (e.g., 'END', '2024')"
                     autoComplete="off"
                 />
             </InlineGrid>

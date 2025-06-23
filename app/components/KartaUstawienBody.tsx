@@ -19,54 +19,54 @@ interface KartaUstawienBodyProps {
 export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps) {
     const opcjeTypuBody = [
         {
-            label: "Kolejny numer (1, 2, 3...)",
+            label: "Consecutive Number (1, 2, 3...)",
             value: TypBody.KOLEJNY_NUMER,
-            helpText: "Generuje kolejne numery od ustawionego początku"
+            helpText: "Generates sequential numbers from the set start"
         },
         {
-            label: "Kontynuuj od ostatniego",
+            label: "Continue from Last SKU",
             value: TypBody.KONTYNUUJ_OSTATNI,
-            helpText: "Automatycznie znajduje najwyższy użyty numer i kontynuuje"
+            helpText: "Automatically finds the highest used number and continues"
         },
         {
-            label: "ID produktu",
+            label: "Product ID",
             value: TypBody.ID_PRODUKTU,
-            helpText: "Używa unikalnego ID produktu z Shopify"
+            helpText: "Uses the unique Product ID from Shopify"
         },
         {
-            label: "ID wariantu",
+            label: "Variant ID",
             value: TypBody.ID_WARIANTU,
-            helpText: "Używa unikalnego ID wariantu z Shopify"
+            helpText: "Uses the unique Variant ID from Shopify"
         },
         {
-            label: "Losowy numer",
+            label: "Random Number",
             value: TypBody.LOSOWY_NUMER,
-            helpText: "Generuje losowy numer dla każdego SKU"
+            helpText: "Generates a random number for each SKU"
         },
         {
-            label: "Bez body",
+            label: "Disable Body",
             value: TypBody.BEZ_BODY,
-            helpText: "Pomija główną część numeryczną"
+            helpText: "Skips the main numerical part"
         },
     ];
 
     const opcjeSeparatora = [
-        { label: "Brak separatora", value: "" },
-        { label: "Myślnik (-)", value: "-" },
-        { label: "Podkreślenie (_)", value: "_" },
-        { label: "Kropka (.)", value: "." },
-        { label: "Spacja ( )", value: " " },
+        { label: "No Separator", value: "" },
+        { label: "Dash (-)", value: "-" },
+        { label: "Underscore (_)", value: "_" },
+        { label: "Dot (.)", value: "." },
+        { label: "Space ( )", value: " " },
     ];
 
     return (
         <Card>
             <BlockStack gap="400">
                 <Text variant="headingMd" as="h2">
-                    Główna część SKU
+                    SKU Main Body & Separator
                 </Text>
 
                 <ChoiceList
-                    title="Typ generowania"
+                    title="Generation Type"
                     choices={opcjeTypuBody}
                     selected={[zasady.typBody]}
                     onChange={(selected) => {
@@ -77,7 +77,7 @@ export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps
                 />
 
                 <Text variant="bodyMd" as="p" tone="subdued">
-                    Wybierz strategię generowania głównej części SKU
+                    Choose the generation strategy for the main part of the SKU.
                 </Text>
 
                 <Select
@@ -85,7 +85,7 @@ export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps
                     options={opcjeSeparatora}
                     value={zasady.separator}
                     onChange={(value) => aktualizuj({ separator: value })}
-                    helpText="Znak oddzielający części SKU"
+                    helpText="Character separating SKU parts"
                 />
             </BlockStack>
         </Card>

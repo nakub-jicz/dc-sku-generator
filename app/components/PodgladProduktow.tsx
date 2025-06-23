@@ -115,7 +115,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                         {wariant.product.title} - {wariant.title}
                     </Text>
                 </IndexTable.Cell>
-                <IndexTable.Cell>{wariant.sku || "Brak SKU"}</IndexTable.Cell>
+                <IndexTable.Cell>{wariant.sku || "No SKU"}</IndexTable.Cell>
                 <IndexTable.Cell>
                     {generujPojedynczeSKU(zasady, wariant, index)}
                 </IndexTable.Cell>
@@ -141,7 +141,7 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
 
                     {wybraneProdukty.length > 0 && (
                         <IndexTable
-                            resourceName={{ singular: "wariant", plural: "warianty" }}
+                            resourceName={{ singular: "variant", plural: "variants" }}
                             itemCount={allVariants.length}
                             selectedItemsCount={
                                 allResourcesSelected ? "All" : selectedResources.length
