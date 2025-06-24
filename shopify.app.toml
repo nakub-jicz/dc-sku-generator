@@ -3,7 +3,7 @@
 client_id = "63a90b4861df9c446f00454b3de19a2a"
 name = "DC SKU Generator"
 handle = "dc-sku-generator"
-application_url = "https://production-oak-et-schemes.trycloudflare.com"
+application_url = "https://ict-offer-physically-impacts.trycloudflare.com"
 embedded = true
 
 [build]
@@ -27,9 +27,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://production-oak-et-schemes.trycloudflare.com/auth/callback",
-  "https://production-oak-et-schemes.trycloudflare.com/auth/shopify/callback",
-  "https://production-oak-et-schemes.trycloudflare.com/api/auth/callback"
+  "https://ict-offer-physically-impacts.trycloudflare.com/auth/callback",
+  "https://ict-offer-physically-impacts.trycloudflare.com/auth/shopify/callback",
+  "https://ict-offer-physically-impacts.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

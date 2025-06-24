@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { Form } from "@remix-run/react";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@shopify/polaris";
 import { DeleteIcon } from "@shopify/polaris-icons";
 import styles from './PodgladProduktow.module.css';
+import type { Dispatch, SetStateAction } from "react";
 
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 import { generujPojedynczeSKU } from "../services/generatorSKU";
@@ -31,6 +32,10 @@ interface AppBridgeProduct {
 
 interface PodgladProduktowProps {
     zasady: ZasadyGeneratora;
+    products: ProductVariant[];
+    selectedVariantIds: string[];
+    setSelectedVariantIds: Dispatch<SetStateAction<string[]>>;
+    scope?: string;
 }
 
 // Typ dla wariantu produktu - na razie uproszczony
@@ -68,10 +73,43 @@ interface AppBridgeProduct {
  * pokazuje tylko szkielet danych, który wkrótce zostanie wypełniony
  * dynamicznie generowanymi SKU.
  */
-export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
+export function PodgladProduktow({ zasady, products, selectedVariantIds, setSelectedVariantIds, scope }: PodgladProduktowProps) {
     const [wybraneProdukty, setWybraneProdukty] = useState<AppBridgeProduct[]>([]);
-    const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
     const shopify = useAppBridge();
+
+    // Picker logic only for 'products' or 'variants' scope
+    const handleAdd = async () => {
+        if (scope === 'products') {
+            const produkty = await shopify.resourcePicker({
+                type: "product",
+                action: "select",
+                multiple: true,
+            });
+            // Tu można dodać logikę do obsługi wybranych produktów
+            // (np. fetcher.submit lub przekierowanie)
+        } else if (scope === 'variants') {
+            const warianty = await shopify.resourcePicker({
+                type: "variant",
+                action: "select",
+                multiple: true,
+            });
+            // Tu można dodać logikę do obsługi wybranych wariantów
+            // (np. fetcher.submit lub przekierowanie)
+        }
+    };
+
+    // Grupowanie wariantów po produkcie
+    const groupedByProduct = useMemo(() => {
+        const map = new Map<string, { product: ProductVariant["product"], variants: ProductVariant[] }>();
+        for (const variant of products) {
+            const pid = variant.product.id;
+            if (!map.has(pid)) {
+                map.set(pid, { product: variant.product, variants: [] });
+            }
+            map.get(pid)!.variants.push(variant);
+        }
+        return Array.from(map.values());
+    }, [products]);
 
     const handleProductSelection = async () => {
         try {
@@ -116,98 +154,73 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                 return acc;
             }, []);
         });
-        setSelectedVariants(prev => prev.filter(id => id !== variantId));
+        setSelectedVariantIds(prev => prev.filter(id => id !== variantId));
     };
 
-    const allVariants = wybraneProdukty.flatMap((product) =>
-        product.variants.map((variant) => ({
-            ...variant,
-            product: {
-                id: product.id,
-                title: product.title,
-                vendor: product.vendor,
-                productType: product.productType,
-            },
-            selectedOptions: variant.title.split(' / ').map(opt => ({ name: 'Option', value: opt }))
-        }))
-    );
-    const allVariantIds = allVariants.map(v => v.id);
+    const allVariantIds = products.map(v => v.id);
+    const allItemsSelected = allVariantIds.length > 0 && selectedVariantIds.length === allVariantIds.length;
+    const someItemsSelected = selectedVariantIds.length > 0 && !allItemsSelected;
 
     // Obsługa zaznaczania pojedynczego wariantu
     const handleVariantCheckbox = (variantId: string, checked: boolean) => {
-        setSelectedVariants(prev => {
+        setSelectedVariantIds((prev: string[]) => {
             if (checked) {
                 return [...prev, variantId];
             } else {
-                return prev.filter(id => id !== variantId);
+                return prev.filter((id: string) => id !== variantId);
             }
         });
     };
 
     // Obsługa zaznaczania wszystkich wariantów produktu
-    const handleProductCheckbox = (product: AppBridgeProduct, checked: boolean) => {
-        const variantIds = product.variants.map(v => v.id);
-        setSelectedVariants(prev => {
+    const handleProductCheckbox = (product: ProductVariant["product"], checked: boolean) => {
+        const variantIds = groupedByProduct.find(g => g.product.id === product.id)?.variants.map(v => v.id) || [];
+        setSelectedVariantIds((prev: string[]) => {
             if (checked) {
-                // Dodaj wszystkie warianty produktu, bez duplikatów
                 return Array.from(new Set([...prev, ...variantIds]));
             } else {
-                // Usuń wszystkie warianty produktu
-                return prev.filter(id => !variantIds.includes(id));
+                return prev.filter((id: string) => !variantIds.includes(id));
             }
         });
     };
 
     // Obsługa select all
     const handleSelectAll = (checked: boolean) => {
-        setSelectedVariants(checked ? allVariantIds : []);
+        setSelectedVariantIds(() => (checked ? allVariantIds : []));
     };
 
-    // Wyliczanie stanu globalnego checkboxa
-    const allItemsSelected = allVariantIds.length > 0 && selectedVariants.length === allVariantIds.length;
-    const someItemsSelected = selectedVariants.length > 0 && !allItemsSelected;
-
+    // Renderowanie tabeli
     let flatIndex = -1;
-    const rowMarkup = wybraneProdukty.flatMap(product => {
-        const variantIds = product.variants.map(v => v.id);
-        const selectedCount = variantIds.filter(id => selectedVariants.includes(id)).length;
+    const rowMarkup = groupedByProduct.flatMap(group => {
+        const variantIds = group.variants.map(v => v.id);
+        const selectedCount = variantIds.filter(id => selectedVariantIds.includes(id)).length;
         const allSelected = selectedCount === variantIds.length && variantIds.length > 0;
         const indeterminate = selectedCount > 0 && selectedCount < variantIds.length;
 
         // Nagłówek produktu z własnym checkboxem
         flatIndex++;
         const productRow = (
-            <IndexTable.Row key={product.id} id={product.id} position={flatIndex} onClick={() => handleProductCheckbox(product, !allSelected)} data-row-selected={allSelected}>
+            <IndexTable.Row key={group.product.id} id={group.product.id} position={flatIndex} onClick={() => handleProductCheckbox(group.product, !allSelected)} data-row-selected={allSelected}>
                 <IndexTable.Cell>
                     <span style={{ marginRight: '1rem' }} onClick={e => e.stopPropagation()}>
                         <Checkbox
                             checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
-                            onChange={checked => handleProductCheckbox(product, checked)}
+                            onChange={checked => handleProductCheckbox(group.product, checked)}
                             label=""
                             labelHidden
                         />
                     </span>
-                    <span style={{ flex: 1 }}>{product.title}</span>
+                    <span style={{ flex: 1 }}>{group.product.title}</span>
                 </IndexTable.Cell>
                 <IndexTable.Cell />
                 <IndexTable.Cell />
-                <IndexTable.Cell>
-                    <span onClick={e => e.stopPropagation()}>
-                        <Button
-                            variant="plain"
-                            tone="critical"
-                            icon={DeleteIcon}
-                            onClick={() => handleRemoveProduct(product.id)}
-                            accessibilityLabel={`Remove product ${product.title}`}
-                        >Usuń produkt</Button>
-                    </span>
-                </IndexTable.Cell>
+                <IndexTable.Cell />
             </IndexTable.Row>
         );
         // Warianty pod produktem
-        const variantRows = product.variants.map((variant) => {
+        const variantRows = group.variants.map((variant) => {
             flatIndex++;
-            const isChecked = selectedVariants.includes(variant.id);
+            const isChecked = selectedVariantIds.includes(variant.id);
             return (
                 <IndexTable.Row key={variant.id} id={variant.id} position={flatIndex} selected={isChecked} onClick={() => handleVariantCheckbox(variant.id, !isChecked)} data-row-selected={isChecked}>
                     <IndexTable.Cell>
@@ -225,35 +238,16 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                     </IndexTable.Cell>
                     <IndexTable.Cell>{variant.sku || "No SKU"}</IndexTable.Cell>
                     <IndexTable.Cell>
-                        {generujPojedynczeSKU(zasady, {
-                            ...variant,
-                            product: {
-                                id: product.id,
-                                title: product.title,
-                                vendor: product.vendor,
-                                productType: product.productType,
-                            },
-                            selectedOptions: variant.title.split(' / ').map(opt => ({ name: 'Option', value: opt }))
-                        }, flatIndex)}
+                        {generujPojedynczeSKU(zasady, variant, flatIndex)}
                     </IndexTable.Cell>
-                    <IndexTable.Cell>
-                        <span onClick={e => e.stopPropagation()}>
-                            <Button
-                                variant="plain"
-                                tone="critical"
-                                icon={DeleteIcon}
-                                onClick={() => handleRemoveVariant(product.id, variant.id)}
-                                accessibilityLabel={`Remove variant ${variant.title}`}
-                            />
-                        </span>
-                    </IndexTable.Cell>
+                    <IndexTable.Cell />
                 </IndexTable.Row>
             );
         });
         return [productRow, ...variantRows];
     });
 
-    const wybraneWariantyDoZapisu = allVariants.filter(v => selectedVariants.includes(v.id));
+    const wybraneWariantyDoZapisu = products.filter(v => selectedVariantIds.includes(v.id));
 
     return (
         <Card>
@@ -265,36 +259,47 @@ export function PodgladProduktow({ zasady }: PodgladProduktowProps) {
                         <Text variant="headingMd" as="h2">
                             Product Preview
                         </Text>
-                        <Button onClick={handleProductSelection}>Add Products</Button>
+                        {(scope === 'products' || scope === 'variants') && (
+                            <Button onClick={handleAdd} variant="primary">
+                                {scope === 'products' ? 'Add Products' : 'Add Variants'}
+                            </Button>
+                        )}
                     </InlineStack>
-                    {wybraneProdukty.length > 0 && (
-                        <IndexTable
-                            resourceName={{ singular: "variant", plural: "variants" }}
-                            itemCount={allVariants.length}
-                            selectedItemsCount={allItemsSelected ? "All" : selectedVariants.length}
-                            selectable={false}
-                            headings={[
-                                {
-                                    id: 'product',
-                                    title: (
-                                        <InlineStack gap="400" blockAlign="center" wrap={false}>
-                                            <Checkbox
-                                                label="Select all variants"
-                                                labelHidden
-                                                checked={allItemsSelected ? true : (someItemsSelected ? 'indeterminate' : false)}
-                                                onChange={handleSelectAll}
-                                            />
-                                            <Text as="span">Product / Variant</Text>
-                                        </InlineStack>
-                                    )
-                                },
-                                { title: "Current SKU" },
-                                { title: "New SKU" },
-                                { title: "Actions" },
-                            ]}
-                        >
-                            {rowMarkup}
-                        </IndexTable>
+                    {products.length > 0 && (
+                        <>
+                            <div style={{ marginBottom: 8, display: 'block' }}>
+                                <Text as="span" variant="bodySm" tone="subdued">
+                                    {`${selectedVariantIds.length} of ${allVariantIds.length} variants selected`}
+                                </Text>
+                            </div>
+                            <IndexTable
+                                resourceName={{ singular: "variant", plural: "variants" }}
+                                itemCount={allVariantIds.length}
+                                selectedItemsCount={allItemsSelected ? "All" : selectedVariantIds.length}
+                                selectable={false}
+                                headings={[
+                                    {
+                                        id: 'product',
+                                        title: (
+                                            <InlineStack gap="400" blockAlign="center" wrap={false}>
+                                                <Checkbox
+                                                    label="Select all variants"
+                                                    labelHidden
+                                                    checked={allItemsSelected ? true : (someItemsSelected ? 'indeterminate' : false)}
+                                                    onChange={handleSelectAll}
+                                                />
+                                                <Text as="span">Product / Variant</Text>
+                                            </InlineStack>
+                                        )
+                                    },
+                                    { title: "Current SKU" },
+                                    { title: "New SKU" },
+                                    { title: "Actions" },
+                                ]}
+                            >
+                                {rowMarkup}
+                            </IndexTable>
+                        </>
                     )}
                     <BlockStack>
                         <Button

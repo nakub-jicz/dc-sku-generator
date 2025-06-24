@@ -105,3 +105,15 @@
     width: 400px;
   }
 }
+
+.gridCards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .gridCards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
