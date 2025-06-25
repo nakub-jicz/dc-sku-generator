@@ -1,4 +1,4 @@
-import { Card, TextField, InlineGrid, Text } from "@shopify/polaris";
+import { Card, TextField, InlineGrid, Text, Checkbox, BlockStack } from "@shopify/polaris";
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 
 interface KartaPodstawowychZasadProps {
@@ -52,6 +52,35 @@ export function KartaPodstawowychZasad({ zasady, aktualizuj }: KartaPodstawowych
                     autoComplete="off"
                 />
             </InlineGrid>
+
+            <BlockStack gap="400">
+                <Checkbox
+                    label="Use Zero-Padded Numbering"
+                    helpText="Format numbers with leading zeros (e.g., 001, 002, 003 instead of 1, 2, 3)"
+                    checked={zasady.uzyjNumeracjiZZerami}
+                    onChange={(checked) => aktualizuj({ uzyjNumeracjiZZerami: checked })}
+                />
+
+                {zasady.uzyjNumeracjiZZerami && (
+                    <div style={{ width: '200px' }}>
+                        <TextField
+                            label="Number of Digits"
+                            type="number"
+                            value={zasady.iloscCyfrWNumeracji.toString()}
+                            onChange={(value) => {
+                                const numValue = parseInt(value) || 3;
+                                // Minimum 2 digits, maximum 10 digits
+                                const clampedValue = Math.max(2, Math.min(10, numValue));
+                                aktualizuj({ iloscCyfrWNumeracji: clampedValue });
+                            }}
+                            helpText={`Numbers will be formatted like: ${(zasady.poczatekNumeracji).toString().padStart(zasady.iloscCyfrWNumeracji, '0')}`}
+                            autoComplete="off"
+                            min={2}
+                            max={10}
+                        />
+                    </div>
+                )}
+            </BlockStack>
         </Card>
     );
 } 

@@ -7,7 +7,7 @@ interface KartaPodsumowaniaProps {
 
 export function KartaPodsumowania({ zasady }: KartaPodsumowaniaProps) {
 
-    if (!zasady || !zasady.uklad) {
+    if (!zasady || !zasady.ukladSKU) {
         return (
             <Card>
                 <SkeletonBodyText lines={2} />
@@ -15,12 +15,24 @@ export function KartaPodsumowania({ zasady }: KartaPodsumowaniaProps) {
         )
     }
 
-    const przykladoweSKU = [
-        `${zasady.prefix || ''}`,
-        `NAZWAPRODUKTU`,
-        ...zasady.uklad.map(u => u.wartosc || `[${u.typ}]`),
-        `${zasady.sufix || ''}`
-    ].filter(Boolean).join(zasady.separator);
+    // Stworzenie przykładowego SKU na podstawie aktualnych zasad
+    const dostepneCzesci: { [key: string]: string } = {
+        prefix: zasady.prefix,
+        sufix: zasady.sufix,
+        body: zasady.uzyjNumeracjiZZerami
+            ? zasady.poczatekNumeracji.toString().padStart(zasady.iloscCyfrWNumeracji, '0')
+            : zasady.poczatekNumeracji.toString()
+    };
+
+    // Dodaj przykładowe wartości dla dodatkowych komponentów
+    zasady.dodatkoweKomponenty.forEach((komponent) => {
+        dostepneCzesci[komponent.id] = `[${komponent.typ.replace(/_/g, ' ').toUpperCase()}]`;
+    });
+
+    const przykladoweSKU = zasady.ukladSKU
+        .map(id => dostepneCzesci[id])
+        .filter(Boolean)
+        .join(zasady.separator);
 
     return (
         <Card>

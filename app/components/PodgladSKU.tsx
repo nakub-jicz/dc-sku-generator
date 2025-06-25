@@ -73,7 +73,13 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
             case "body": {
                 let wartosc;
                 switch (zasady.typBody) {
-                    case "consecutive": wartosc = zasady.poczatekNumeracji.toString(); break;
+                    case "consecutive":
+                        if (zasady.uzyjNumeracjiZZerami) {
+                            wartosc = zasady.poczatekNumeracji.toString().padStart(zasady.iloscCyfrWNumeracji, '0');
+                        } else {
+                            wartosc = zasady.poczatekNumeracji.toString();
+                        }
+                        break;
                     case "product_id": wartosc = przykladoweDane.idProduktu; break;
                     case "variant_id": wartosc = przykladoweDane.idWariantu; break;
                     case "random": wartosc = Math.floor(Math.random() * 1000).toString(); break;
@@ -204,6 +210,11 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
                         {zasady.sufix && (
                             <Badge tone="success" size="small">
                                 {`Suffix: "${zasady.sufix}"`}
+                            </Badge>
+                        )}
+                        {zasady.uzyjNumeracjiZZerami && (
+                            <Badge tone="info" size="small">
+                                {`Zero-padded: ${zasady.iloscCyfrWNumeracji} digits`}
                             </Badge>
                         )}
                     </InlineStack>

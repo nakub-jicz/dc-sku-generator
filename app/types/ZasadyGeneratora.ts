@@ -53,6 +53,10 @@ export interface ZasadyGeneratora {
     randomMin: number;
     randomMax: number;
 
+    // Konfiguracja numeracji z zerami
+    uzyjNumeracjiZZerami: boolean;
+    iloscCyfrWNumeracji: number;
+
     // Elastyczny separator
     separator: string;
     customSeparator: string;

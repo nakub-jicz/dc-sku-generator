@@ -42,7 +42,12 @@ export function generujPojedynczeSKU(
     // Krok 2: Wygeneruj 'body'
     switch (zasady.typBody) {
         case TypBody.KOLEJNY_NUMER:
-            dostepneCzesci['body'] = (zasady.poczatekNumeracji + index).toString();
+            const numer = zasady.poczatekNumeracji + index;
+            if (zasady.uzyjNumeracjiZZerami) {
+                dostepneCzesci['body'] = numer.toString().padStart(zasady.iloscCyfrWNumeracji, '0');
+            } else {
+                dostepneCzesci['body'] = numer.toString();
+            }
             break;
         case TypBody.ID_PRODUKTU:
             dostepneCzesci['body'] = wariant.product.id.split('/').pop() || "";
@@ -55,7 +60,12 @@ export function generujPojedynczeSKU(
             break;
         case TypBody.KONTYNUUJ_OSTATNI:
             // Logika do implementacji - na razie placeholder
-            dostepneCzesci['body'] = (100 + index).toString();
+            const numerKontynuowany = 100 + index;
+            if (zasady.uzyjNumeracjiZZerami) {
+                dostepneCzesci['body'] = numerKontynuowany.toString().padStart(zasady.iloscCyfrWNumeracji, '0');
+            } else {
+                dostepneCzesci['body'] = numerKontynuowany.toString();
+            }
             break;
         case TypBody.BEZ_BODY:
             dostepneCzesci['body'] = "";
