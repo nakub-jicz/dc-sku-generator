@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { Form } from "@remix-run/react";
+import { Form, useNavigate } from "@remix-run/react";
 import {
     Card,
     Button,
@@ -57,6 +57,7 @@ interface PodgladProduktowProps {
  */
 export function PodgladProduktow({ zasady, products, selectedVariantIds, setSelectedVariantIds, scope }: PodgladProduktowProps) {
     const shopify = useAppBridge();
+    const navigate = useNavigate();
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +66,16 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
 
     // Use pickedVariants if set, otherwise fallback to loader products
     const displayVariants = pickedVariants ?? products;
+
+    // Reset pickedVariants only when scope changes to 'all'
+    useEffect(() => {
+        console.log('PodgladProduktow useEffect:', { scope, productsLength: products.length, pickedVariants: pickedVariants?.length });
+        if (scope === 'all' && pickedVariants !== null) {
+            console.log('Resetting pickedVariants because scope=all');
+            setPickedVariants(null);
+        }
+        // Gdy scope='products' albo 'none' - nie resetuj pickedVariants
+    }, [scope]); // Usuwam products.length i pickedVariants z dependencies żeby uniknąć niepotrzebnych re-renderów
 
     // Grupowanie wariantów po produkcie
     const groupedByProduct = useMemo(() => {
@@ -119,9 +130,11 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                     selectedOptions: variant.selectedOptions,
                 }))
             );
+
             setPickedVariants(variants);
             setShowToast(true);
             setToastMessage(`Loaded ${variants.length} variants from ${productIds.length} product${productIds.length > 1 ? 's' : ''}`);
+            // Note: Nie zmieniamy scope tutaj - to będzie zrobione przez przycisk w KartaZasobowDocelowych
         } catch (error) {
             console.error("Error loading product variants:", error);
             setShowToast(true);
@@ -163,12 +176,12 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         }
     };
 
-    // Reset to all products
+    // Reset to all products - przekieruj do scope=all
     const handleReset = () => {
+        // Wyczyść wybrane produkty i przekieruj do scope=all
         setPickedVariants(null);
         setPickedProducts([]);
-        setShowToast(true);
-        setToastMessage("Showing all products");
+        navigate("?scope=all", { replace: true });
     };
 
     const allVariantIds = displayVariants.map(v => v.id);

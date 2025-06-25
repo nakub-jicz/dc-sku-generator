@@ -13,7 +13,7 @@ export function KartaZasobowDocelowych() {
     const location = useLocation();
     const fetcher = useFetcher();
     const params = new URLSearchParams(location.search);
-    const currentScope = params.get("scope") || "all";
+    const currentScope = params.get("scope") || "none";
     const currentIds = params.get("ids")?.split(",") || [];
 
     // Wyświetlanie aktualnego scope z wyraźnym wskaźnikiem wizualnym
@@ -37,8 +37,16 @@ export function KartaZasobowDocelowych() {
                     );
                 }
                 return null;
+            case 'none':
             default:
-                return null;
+                return (
+                    <InlineStack gap="200" blockAlign="center">
+                        <Badge>◦</Badge>
+                        <Text as="span" variant="bodyMd" tone="subdued">
+                            No Products Selected
+                        </Text>
+                    </InlineStack>
+                );
         }
     };
 

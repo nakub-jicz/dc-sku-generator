@@ -52,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const scope = url.searchParams.get("scope") || "all";
+  const scope = url.searchParams.get("scope") || "none";
   const ids = url.searchParams.get("ids")?.split(",").filter(Boolean) || [];
 
   let products: ProductVariant[] = [];
@@ -164,56 +164,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
       break;
 
+    case 'none':
     default:
-      // Domyślnie pobierz wszystkie produkty
-      const defaultResponse = await admin.graphql(
-        `#graphql
-          query GetDefaultProducts {
-            products(first: 10) {
-              nodes {
-                id
-                title
-                vendor
-                productType
-                images(first: 1) {
-                  nodes {
-                    id
-                    url
-                    altText
-                  }
-                }
-                variants(first: 50) {
-                  nodes {
-                    id
-                    title
-                    sku
-                    selectedOptions {
-                      name
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }`
-      );
-
-      const defaultData = await defaultResponse.json();
-      products = defaultData.data.products.nodes.flatMap((product: any) =>
-        product.variants.nodes.map((variant: any) => ({
-          id: variant.id,
-          title: variant.title,
-          sku: variant.sku,
-          product: {
-            id: product.id,
-            title: product.title,
-            vendor: product.vendor,
-            productType: product.productType,
-            images: product.images.nodes,
-          },
-          selectedOptions: variant.selectedOptions,
-        }))
-      );
+      // Domyślnie nie pobieramy żadnych produktów - pusty stan
+      products = [];
+      break;
   }
 
   return {
