@@ -209,6 +209,9 @@ export default function Index() {
     sufix: "",
     typBody: TypBody.KOLEJNY_NUMER,
     separator: "-",
+    customSeparator: "",
+    randomMin: 1000,
+    randomMax: 99999,
     dodatkoweKomponenty: [],
     // Na start mamy tylko podstawowe, niezmienne bloki w naszym układzie.
     ukladSKU: ["prefix", "body", "sufix"],

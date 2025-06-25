@@ -49,8 +49,13 @@ export interface ZasadyGeneratora {
     poczatekNumeracji: number;
     typBody: TypBody;
 
+    // Konfiguracja dla losowych numerów
+    randomMin: number;
+    randomMax: number;
+
     // Elastyczny separator
     separator: string;
+    customSeparator: string;
 
     // Komponenty opcjonalne (zarządzane przez użytkownika)
     dodatkoweKomponenty: DodatkowyKomponent[];
