@@ -63,10 +63,9 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     const [isLoading, setIsLoading] = useState(false);
     const [pickedVariants, setPickedVariants] = useState<ProductVariant[] | null>(null);
     const [, setPickedProducts] = useState<any[]>([]);
-    const [hiddenProductIds, setHiddenProductIds] = useState<Set<string>>(new Set());
 
-    // Use pickedVariants if set, otherwise fallback to loader products (filtered by hidden)
-    const displayVariants = (pickedVariants ?? products).filter(variant => !hiddenProductIds.has(variant.product.id));
+    // Use pickedVariants if set, otherwise fallback to loader products
+    const displayVariants = pickedVariants ?? products;
 
     // Reset pickedVariants only when scope changes to 'all'
     useEffect(() => {
@@ -75,10 +74,10 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
             console.log('Resetting pickedVariants because scope=all');
             setPickedVariants(null);
         }
-        // Reset hidden products when scope changes
-        setHiddenProductIds(new Set());
         // Gdy scope='products' albo 'none' - nie resetuj pickedVariants
     }, [scope]); // Usuwam products.length i pickedVariants z dependencies żeby uniknąć niepotrzebnych re-renderów
+
+
 
     // Grupowanie wariantów po produkcie
     const groupedByProduct = useMemo(() => {
@@ -221,20 +220,35 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
 
     // Usuwanie całego produktu (wszystkich jego wariantów)
     const handleRemoveProduct = (productId: string) => {
+        console.log('handleRemoveProduct called:', {
+            productId,
+            pickedVariants: !!pickedVariants,
+            displayVariantsCount: displayVariants.length
+        });
+
+        // Najpierw znajdź warianty do usunięcia PRZED filtrowaniem
+        const sourceVariants = pickedVariants ?? products;
+        const removedVariantIds = sourceVariants
+            .filter(variant => variant.product.id === productId)
+            .map(variant => variant.id);
+
         if (pickedVariants) {
             // Jeśli mamy wybrane produkty, usuń z nich
             const updatedVariants = pickedVariants.filter(variant => variant.product.id !== productId);
             setPickedVariants(updatedVariants);
+            console.log('Removed from pickedVariants, new count:', updatedVariants.length);
         } else {
-            // Jeśli pokazujemy wszystkie produkty, dodaj do ukrytych
-            setHiddenProductIds(prev => new Set([...prev, productId]));
+            // Jeśli pokazujemy wszystkie produkty, przekonwertuj na selected products
+            console.log('Converting from All Products to Selected Products, removing:', productId);
+            const remainingVariants = products.filter(variant => variant.product.id !== productId);
+            setPickedVariants(remainingVariants);
+            console.log('Set pickedVariants to remaining products, count:', remainingVariants.length);
+
+            // Zmień scope na products, żeby UI się zaktualizowało
+            navigate("?scope=products", { replace: true });
         }
 
         // Usuń także zaznaczenia dla usuniętych wariantów
-        const removedVariantIds = displayVariants
-            .filter(variant => variant.product.id === productId)
-            .map(variant => variant.id);
-
         setSelectedVariantIds(prev => prev.filter(id => !removedVariantIds.includes(id)));
 
         setShowToast(true);
@@ -248,15 +262,14 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
             const updatedVariants = pickedVariants.filter(variant => variant.id !== variantId);
             setPickedVariants(updatedVariants);
         } else {
-            // Jeśli pokazujemy wszystkie produkty, znajdź produkt tego wariantu i ukryj go
-            const variant = displayVariants.find(v => v.id === variantId);
-            if (variant) {
-                const productVariants = displayVariants.filter(v => v.product.id === variant.product.id);
-                // Jeśli to ostatni wariant produktu, ukryj cały produkt
-                if (productVariants.length === 1) {
-                    setHiddenProductIds(prev => new Set([...prev, variant.product.id]));
-                }
-            }
+            // Jeśli pokazujemy wszystkie produkty, przekonwertuj na selected products
+            console.log('Converting from All Products to Selected Products, removing variant:', variantId);
+            const remainingVariants = products.filter(variant => variant.id !== variantId);
+            setPickedVariants(remainingVariants);
+            console.log('Set pickedVariants to remaining variants, count:', remainingVariants.length);
+
+            // Zmień scope na products, żeby UI się zaktualizowało
+            navigate("?scope=products", { replace: true });
         }
 
         // Zawsze usuń zaznaczenie dla usuniętego wariantu
@@ -367,7 +380,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                                                 </InlineStack>
                                                                 <InlineStack gap="200" blockAlign="center">
                                                                     <Badge tone="info">
-                                                                        {selectedCount} of {variantIds.length} variants
+                                                                        {`${selectedCount} of ${variantIds.length} variants`}
                                                                     </Badge>
                                                                     <div className={styles.removeButton}>
                                                                         <Button
@@ -480,7 +493,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                     submit
                                     disabled={wybraneWariantyDoZapisu.length === 0}
                                 >
-                                    Generate SKUs for {wybraneWariantyDoZapisu.length} variant{wybraneWariantyDoZapisu.length === 1 ? '' : 's'}
+                                    {`Generate SKUs for ${wybraneWariantyDoZapisu.length} variant${wybraneWariantyDoZapisu.length === 1 ? '' : 's'}`}
                                 </Button>
                             </div>
                         </BlockStack>
