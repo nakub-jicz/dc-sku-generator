@@ -46,21 +46,23 @@ function ReorderableItem({ id, zasady, aktualizuj }: { id: string; zasady: Zasad
     };
     return (
         <Reorder.Item value={id} id={id} style={{ y }} as="div">
-            <Box padding="200" background="bg-surface-secondary" borderRadius="100" shadow="200">
-                <InlineStack gap="100" blockAlign="center">
-                    <Icon source={DragHandleIcon} tone="base" />
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">
-                        {(() => {
-                            const parts = id.split('_');
-                            let typ = parts.length > 2 ? parts.slice(0, 2).join('_') : parts[0];
-                            let label = nazwyKomponentow[typ];
-                            if (!label && parts.length > 1) {
-                                // Fallback: spróbuj ostatni segment (np. option1, vendor)
-                                label = nazwyKomponentow[parts[parts.length - 2]] || nazwyKomponentow[parts[parts.length - 1]];
-                            }
-                            return label || typ;
-                        })()}
-                    </Text>
+            <Box padding="300" background="bg-surface-secondary" borderRadius="200" shadow="200">
+                <InlineStack gap="200" blockAlign="center" align="space-between">
+                    <InlineStack gap="200" blockAlign="center">
+                        <Icon source={DragHandleIcon} tone="base" />
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                            {(() => {
+                                const parts = id.split('_');
+                                let typ = parts.length > 2 ? parts.slice(0, 2).join('_') : parts[0];
+                                let label = nazwyKomponentow[typ];
+                                if (!label && parts.length > 1) {
+                                    // Fallback: spróbuj ostatni segment (np. option1, vendor)
+                                    label = nazwyKomponentow[parts[parts.length - 2]] || nazwyKomponentow[parts[parts.length - 1]];
+                                }
+                                return label || typ;
+                            })()}
+                        </Text>
+                    </InlineStack>
                     {isRemovable && <Button variant="plain" icon={XIcon} onClick={handleRemove} />}
                 </InlineStack>
             </Box>
@@ -118,12 +120,12 @@ export function KartaKinetycznegoUkladu({ zasady, aktualizuj }: KartaKinetyczneg
                         </div>
                     ))}
                 </InlineStack>
-                <Reorder.Group axis="x" values={uklad} onReorder={onReorder} as="div">
-                    <InlineStack gap="300" wrap>
+                <Reorder.Group axis="y" values={uklad} onReorder={onReorder} as="div">
+                    <BlockStack gap="200">
                         {uklad.map((id) => (
                             <ReorderableItem key={id} id={id} zasady={zasady} aktualizuj={aktualizuj} />
                         ))}
-                    </InlineStack>
+                    </BlockStack>
                 </Reorder.Group>
             </BlockStack>
         </Card>

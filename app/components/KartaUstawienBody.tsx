@@ -133,7 +133,7 @@ export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps
                         </Button>
                     ))}
                     <Button
-                        pressed={showCustomSeparator || (zasady.customSeparator && zasady.separator === zasady.customSeparator)}
+                        pressed={showCustomSeparator || (!!zasady.customSeparator && zasady.separator === zasady.customSeparator)}
                         onClick={() => setShowCustomSeparator(true)}
                     >
                         Custom

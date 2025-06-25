@@ -117,3 +117,11 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.gridColumnSticky {
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}

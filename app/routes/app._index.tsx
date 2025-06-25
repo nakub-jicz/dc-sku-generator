@@ -235,8 +235,7 @@ export default function Index() {
                 <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
                 <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
               </BlockStack>
-              <BlockStack gap="400">
-                <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
+              <div className={styles.gridColumnSticky}>
                 <PodgladProduktow
                   zasady={zasady}
                   products={products}
@@ -244,11 +243,14 @@ export default function Index() {
                   setSelectedVariantIds={setSelectedVariantIds}
                   scope={scope}
                 />
-              </BlockStack>
+              </div>
             </div>
           </div>
           <div className={styles.sidebar}>
-            <PodgladSKU zasady={zasady} />
+            <BlockStack gap="400">
+              <PodgladSKU zasady={zasady} />
+              <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
+            </BlockStack>
           </div>
         </div>
       </Page>
