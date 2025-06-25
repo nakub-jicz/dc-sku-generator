@@ -17,7 +17,7 @@ import { KartaUstawienBody } from "../components/KartaUstawienBody";
 import { PodgladSKU } from "../components/PodgladSKU";
 import { PodgladProduktow } from "../components/PodgladProduktow";
 import { KartaKinetycznegoUkladu } from "../components/KartaKinetycznegoUkladu";
-import { KartaZasobowDocelowych } from "../components/KartaZasobowDocelowych";
+
 
 // Typy dla danych produktów
 interface ProductVariant {
@@ -228,7 +228,6 @@ export default function Index() {
           <div className={styles.mainContent}>
             <div className={styles.gridCards}>
               <div>
-                <KartaZasobowDocelowych />
                 <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
                 <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
               </div>
