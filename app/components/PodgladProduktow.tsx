@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { Form, useNavigate } from "@remix-run/react";
 import {
@@ -63,6 +63,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     const [isLoading, setIsLoading] = useState(false);
     const [pickedVariants, setPickedVariants] = useState<ProductVariant[] | null>(null);
     const [, setPickedProducts] = useState<any[]>([]);
+    const hasAutoSelectedRef = useRef(false);
 
     // Use pickedVariants if set, otherwise fallback to loader products
     const displayVariants = pickedVariants ?? products;
@@ -149,6 +150,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
             );
 
             setPickedVariants(variants);
+            hasAutoSelectedRef.current = false; // Reset so new products get auto-selected
             setShowToast(true);
             setToastMessage(`Loaded ${variants.length} variants from ${productIds.length} product${productIds.length > 1 ? 's' : ''}`);
         } catch (error) {
@@ -197,10 +199,20 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         // Wyczyść wybrane produkty i przekieruj do scope=all
         setPickedVariants(null);
         setPickedProducts([]);
+        hasAutoSelectedRef.current = false; // Reset so all products get auto-selected
         navigate("?scope=all", { replace: true });
     };
 
     const allVariantIds = displayVariants.map(v => v.id);
+
+    // Auto-select all variants on first load only
+    useEffect(() => {
+        if (allVariantIds.length > 0 && !hasAutoSelectedRef.current) {
+            console.log('Auto-selecting all variants on first load:', allVariantIds.length);
+            setSelectedVariantIds(allVariantIds);
+            hasAutoSelectedRef.current = true;
+        }
+    }, [allVariantIds.length > 0]); // Trigger when we have variants for the first time
 
     // Synchronizacja: usuń zaznaczenia dla wariantów, które już nie istnieją
     useEffect(() => {
@@ -387,6 +399,18 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                             size="medium"
                                         >
                                             All Products
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                setPickedVariants([]);
+                                                setSelectedVariantIds([]);
+                                                navigate("?scope=products", { replace: true });
+                                            }}
+                                            variant="tertiary"
+                                            size="medium"
+                                            disabled={displayVariants.length === 0}
+                                        >
+                                            Clear Products
                                         </Button>
                                         <Button
                                             variant="primary"
