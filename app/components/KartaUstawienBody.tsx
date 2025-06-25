@@ -141,25 +141,25 @@ export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps
                 </InlineStack>
 
                 {showCustomSeparator && (
-                    <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                        <BlockStack gap="300">
+                    <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                        <BlockStack gap="400">
                             <Text variant="headingSm" as="h3">Create Custom Separator</Text>
-                            <InlineStack gap="200" align="end">
-                                <div style={{ flexGrow: 1 }}>
-                                    <TextField
-                                        label="Custom separator"
-                                        value={tempCustomSeparator}
-                                        onChange={setTempCustomSeparator}
-                                        placeholder="Enter any character(s)"
-                                        autoComplete="off"
-                                        helpText={`Preview: ${zasady.prefix}${tempCustomSeparator}123${tempCustomSeparator}${zasady.sufix}`}
-                                    />
-                                </div>
-                                <Button variant="primary" onClick={handleCustomSeparatorSave}>
-                                    Apply
-                                </Button>
+
+                            <TextField
+                                label="Custom separator"
+                                value={tempCustomSeparator}
+                                onChange={setTempCustomSeparator}
+                                placeholder="Enter any character(s)"
+                                autoComplete="off"
+                                helpText={`Preview: ${zasady.prefix}${tempCustomSeparator}123${tempCustomSeparator}${zasady.sufix}`}
+                            />
+
+                            <InlineStack gap="300" align="end">
                                 <Button onClick={() => setShowCustomSeparator(false)}>
                                     Cancel
+                                </Button>
+                                <Button variant="primary" onClick={handleCustomSeparatorSave}>
+                                    Apply
                                 </Button>
                             </InlineStack>
                         </BlockStack>

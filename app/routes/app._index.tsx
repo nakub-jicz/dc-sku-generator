@@ -211,7 +211,7 @@ export default function Index() {
     separator: "-",
     customSeparator: "",
     randomMin: 1000,
-    randomMax: 99999,
+    randomMax: 9999,
     dodatkoweKomponenty: [],
     // Na start mamy tylko podstawowe, niezmienne bloki w naszym układzie.
     ukladSKU: ["prefix", "body", "sufix"],
