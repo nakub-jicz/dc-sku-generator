@@ -12,8 +12,7 @@ import {
     Badge,
     Divider,
     EmptyState,
-    SkeletonBodyText,
-    SkeletonThumbnail,
+    Toast,
 } from "@shopify/polaris";
 import { ImageIcon } from "@shopify/polaris-icons";
 import styles from './PodgladProduktow.module.css';
@@ -58,11 +57,19 @@ interface PodgladProduktowProps {
  */
 export function PodgladProduktow({ zasady, products, selectedVariantIds, setSelectedVariantIds, scope }: PodgladProduktowProps) {
     const shopify = useAppBridge();
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [pickedVariants, setPickedVariants] = useState<ProductVariant[] | null>(null);
+    const [, setPickedProducts] = useState<any[]>([]);
+
+    // Use pickedVariants if set, otherwise fallback to loader products
+    const displayVariants = pickedVariants ?? products;
 
     // Grupowanie wariantów po produkcie
     const groupedByProduct = useMemo(() => {
         const map = new Map<string, { product: ProductVariant["product"], variants: ProductVariant[] }>();
-        for (const variant of products) {
+        for (const variant of displayVariants) {
             const pid = variant.product.id;
             if (!map.has(pid)) {
                 map.set(pid, { product: variant.product, variants: [] });
@@ -70,26 +77,101 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
             map.get(pid)!.variants.push(variant);
         }
         return Array.from(map.values());
-    }, [products]);
+    }, [displayVariants]);
 
-    const handleProductSelection = async () => {
+    // Fetch variants for picked products
+    const fetchVariantsForProducts = async (productIds: string[]) => {
+        setIsLoading(true);
         try {
-            const produkty = await shopify.resourcePicker({
+            // Use a secure Remix API route instead of direct admin API fetch
+            const res = await fetch("/api/get-variants", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ productIds }),
+                credentials: "include",
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${res.status}: ${res.statusText}`);
+            }
+
+            const products = await res.json();
+
+            if (products.error) {
+                throw new Error(products.error);
+            }
+
+            const variants: ProductVariant[] = products.flatMap((product: any) =>
+                product.variants.nodes.map((variant: any) => ({
+                    id: variant.id,
+                    title: variant.title,
+                    sku: variant.sku,
+                    product: {
+                        id: product.id,
+                        title: product.title,
+                        vendor: product.vendor,
+                        productType: product.productType,
+                        images: product.images.nodes,
+                    },
+                    selectedOptions: variant.selectedOptions,
+                }))
+            );
+            setPickedVariants(variants);
+            setShowToast(true);
+            setToastMessage(`Loaded ${variants.length} variants from ${productIds.length} product${productIds.length > 1 ? 's' : ''}`);
+        } catch (error) {
+            console.error("Error loading product variants:", error);
+            setShowToast(true);
+            setToastMessage(`Error loading product variants: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle ResourcePicker
+    const handleProductSelection = async () => {
+        setIsLoading(true);
+        try {
+            const result = await shopify.resourcePicker({
                 type: "product",
                 action: "select",
                 multiple: true,
             });
 
-            if (produkty) {
-                // Handle selected products - this would need to be integrated with the form submission
-                console.log("Selected products:", produkty);
+            if (result && Array.isArray(result) && result.length > 0) {
+                setPickedProducts(result);
+                const productIds = result.map((product: any) => product.id).filter(Boolean);
+
+                if (productIds.length === 0) {
+                    throw new Error("No valid product IDs found");
+                }
+
+                await fetchVariantsForProducts(productIds);
+            } else {
+                setShowToast(true);
+                setToastMessage("No products selected");
             }
         } catch (error) {
             console.error("ResourcePicker error:", error);
+            setShowToast(true);
+            setToastMessage(`Product selection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const allVariantIds = products.map(v => v.id);
+    // Reset to all products
+    const handleReset = () => {
+        setPickedVariants(null);
+        setPickedProducts([]);
+        setShowToast(true);
+        setToastMessage("Showing all products");
+    };
+
+    const allVariantIds = displayVariants.map(v => v.id);
     const allItemsSelected = allVariantIds.length > 0 && selectedVariantIds.length === allVariantIds.length;
     const someItemsSelected = selectedVariantIds.length > 0 && !allItemsSelected;
 
@@ -121,10 +203,10 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         setSelectedVariantIds(() => (checked ? allVariantIds : []));
     };
 
-    const wybraneWariantyDoZapisu = products.filter(v => selectedVariantIds.includes(v.id));
+    const wybraneWariantyDoZapisu = displayVariants.filter(v => selectedVariantIds.includes(v.id));
 
     // Renderowanie pustego stanu
-    if (products.length === 0) {
+    if (displayVariants.length === 0) {
         return (
             <Card>
                 <EmptyState
@@ -132,7 +214,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                     image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
                 >
                     <p>Select products to generate SKUs for them.</p>
-                    <Button onClick={handleProductSelection} variant="primary">
+                    <Button onClick={handleProductSelection} variant="primary" loading={isLoading}>
                         Select Products
                     </Button>
                 </EmptyState>
@@ -141,187 +223,189 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     }
 
     return (
-        <Card>
-            <Form method="post">
-                <input type="hidden" name="zasady" value={JSON.stringify(zasady)} />
-                <input type="hidden" name="warianty" value={JSON.stringify(wybraneWariantyDoZapisu)} />
-                <BlockStack gap="400">
-                    <InlineStack align="space-between">
-                        <BlockStack gap="200">
-                            <Text variant="headingMd" as="h2">
-                                Product Preview
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                                {`${selectedVariantIds.length} of ${allVariantIds.length} variants selected`}
-                            </Text>
-                        </BlockStack>
-                        <Button onClick={handleProductSelection} variant="secondary">
-                            Select Products
-                        </Button>
-                    </InlineStack>
-
-                    <Divider />
-
-                    {/* Select All Checkbox */}
-                    <InlineStack gap="200" blockAlign="center">
-                        <Checkbox
-                            label="Select all variants"
-                            checked={allItemsSelected ? true : (someItemsSelected ? 'indeterminate' : false)}
-                            onChange={handleSelectAll}
-                        />
-                        <Text as="span" variant="bodySm" tone="subdued">
-                            Select all {allVariantIds.length} variants
-                        </Text>
-                    </InlineStack>
-
-                    <Divider />
-
-                    {/* Products List */}
+        <>
+            <Card>
+                <Form method="post">
+                    <input type="hidden" name="zasady" value={JSON.stringify(zasady)} />
+                    <input type="hidden" name="warianty" value={JSON.stringify(wybraneWariantyDoZapisu)} />
                     <BlockStack gap="400">
-                        {groupedByProduct.map((group) => {
-                            const variantIds = group.variants.map(v => v.id);
-                            const selectedCount = variantIds.filter(id => selectedVariantIds.includes(id)).length;
-                            const allSelected = selectedCount === variantIds.length && variantIds.length > 0;
-                            const indeterminate = selectedCount > 0 && selectedCount < variantIds.length;
-
-                            return (
-                                <div key={group.product.id} className={styles.productCard}>
-                                    <Card padding="400">
-                                        <BlockStack gap="300">
-                                            {/* Product Header */}
-                                            <div className={styles.productHeader}>
-                                                <div
-                                                    onClick={() => handleProductCheckbox(group.product, !allSelected)}
-                                                    className={styles.clickableRow}
-                                                >
-                                                    <InlineStack align="space-between" blockAlign="center">
-                                                        <InlineStack gap="300" blockAlign="center">
-                                                            <div onClick={(e) => e.stopPropagation()}>
-                                                                <Checkbox
-                                                                    checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
-                                                                    onChange={checked => handleProductCheckbox(group.product, checked)}
-                                                                    label=""
-                                                                    labelHidden
-                                                                />
-                                                            </div>
-                                                            <div className={styles.productImage}>
-                                                                <Thumbnail
-                                                                    source={group.product.images?.[0]?.url || ImageIcon}
-                                                                    alt={group.product.images?.[0]?.altText || group.product.title}
-                                                                    size="small"
-                                                                />
-                                                            </div>
-                                                            <BlockStack gap="100">
-                                                                <Text variant="bodyMd" as="h3" fontWeight="semibold">
-                                                                    {group.product.title}
-                                                                </Text>
-                                                                <Text as="span" variant="bodySm" tone="subdued">
-                                                                    {group.product.vendor} • {group.product.productType}
-                                                                </Text>
-                                                            </BlockStack>
-                                                        </InlineStack>
-                                                        <Badge tone="info">
-                                                            {selectedCount} of {variantIds.length} variants
-                                                        </Badge>
-                                                    </InlineStack>
-                                                </div>
-                                            </div>
-
-                                            {/* Variants List */}
-                                            <BlockStack gap="200">
-                                                {group.variants.map((variant, variantIndex) => {
-                                                    const isChecked = selectedVariantIds.includes(variant.id);
-                                                    const newSku = generujPojedynczeSKU(zasady, variant, variantIndex);
-                                                    const variantOptions = variant.selectedOptions
-                                                        .map(opt => `${opt.name}: ${opt.value}`)
-                                                        .join(', ');
-
-                                                    return (
-                                                        <div key={variant.id} className={styles.variantCard}>
-                                                            <Card padding="300" background="bg-surface-secondary">
-                                                                <div
-                                                                    onClick={() => handleVariantCheckbox(variant.id, !isChecked)}
-                                                                    className={styles.clickableRow}
-                                                                >
-                                                                    <InlineStack align="space-between" blockAlign="center">
-                                                                        <InlineStack gap="300" blockAlign="center">
-                                                                            <div onClick={(e) => e.stopPropagation()}>
-                                                                                <Checkbox
-                                                                                    checked={isChecked}
-                                                                                    onChange={checked => handleVariantCheckbox(variant.id, checked)}
-                                                                                    label=""
-                                                                                    labelHidden
-                                                                                />
-                                                                            </div>
-                                                                            <BlockStack gap="100">
-                                                                                <Text variant="bodySm" as="span" fontWeight="medium">
-                                                                                    {variant.title}
-                                                                                </Text>
-                                                                                {variantOptions && (
-                                                                                    <div className={styles.variantOptions}>
-                                                                                        <Text as="span" variant="bodySm" tone="subdued">
-                                                                                            {variantOptions}
-                                                                                        </Text>
-                                                                                    </div>
-                                                                                )}
-                                                                            </BlockStack>
-                                                                        </InlineStack>
-
-                                                                        <div className={styles.skuComparison}>
-                                                                            <BlockStack gap="100" align="end">
-                                                                                <InlineStack gap="200" blockAlign="center">
-                                                                                    <div className={styles.currentSku}>
-                                                                                        <Text as="span" variant="bodySm" tone="subdued">
-                                                                                            Current:
-                                                                                        </Text>
-                                                                                    </div>
-                                                                                    <Text as="span" variant="bodySm" fontWeight="medium">
-                                                                                        {variant.sku || "No SKU"}
-                                                                                    </Text>
-                                                                                </InlineStack>
-                                                                                <InlineStack gap="200" blockAlign="center">
-                                                                                    <Text as="span" variant="bodySm" tone="subdued">
-                                                                                        New:
-                                                                                    </Text>
-                                                                                    <div className={styles.newSku}>
-                                                                                        <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
-                                                                                            {newSku}
-                                                                                        </Text>
-                                                                                    </div>
-                                                                                </InlineStack>
-                                                                            </BlockStack>
-                                                                        </div>
-                                                                    </InlineStack>
-                                                                </div>
-                                                            </Card>
+                        <InlineStack align="space-between">
+                            <BlockStack gap="200">
+                                <Text variant="headingMd" as="h2">
+                                    Product Preview
+                                </Text>
+                                <Text as="p" variant="bodySm" tone="subdued">
+                                    {`${selectedVariantIds.length} of ${allVariantIds.length} variants selected`}
+                                </Text>
+                            </BlockStack>
+                            <InlineStack gap="200">
+                                <Button onClick={handleProductSelection} variant="secondary" loading={isLoading}>
+                                    Select Products
+                                </Button>
+                                <Button onClick={handleReset} variant="tertiary" disabled={pickedVariants === null}>
+                                    All Products
+                                </Button>
+                            </InlineStack>
+                        </InlineStack>
+                        <Divider />
+                        <InlineStack gap="200" blockAlign="center">
+                            <Checkbox
+                                label="Select all variants"
+                                checked={allItemsSelected ? true : (someItemsSelected ? 'indeterminate' : false)}
+                                onChange={handleSelectAll}
+                            />
+                            <Text as="span" variant="bodySm" tone="subdued">
+                                Select all {allVariantIds.length} variants
+                            </Text>
+                        </InlineStack>
+                        <Divider />
+                        <BlockStack gap="400">
+                            {(() => {
+                                let globalVariantIndex = 0;
+                                return groupedByProduct.map((group) => {
+                                    const variantIds = group.variants.map(v => v.id);
+                                    const selectedCount = variantIds.filter(id => selectedVariantIds.includes(id)).length;
+                                    const allSelected = selectedCount === variantIds.length && variantIds.length > 0;
+                                    const indeterminate = selectedCount > 0 && selectedCount < variantIds.length;
+                                    return (
+                                        <div key={group.product.id} className={styles.productCard}>
+                                            <Card padding={"400" as any}>
+                                                <BlockStack gap="300">
+                                                    <div className={styles.productHeader}>
+                                                        <div
+                                                            onClick={() => handleProductCheckbox(group.product, !allSelected)}
+                                                            className={styles.clickableRow}
+                                                        >
+                                                            <InlineStack align="space-between" blockAlign="center">
+                                                                <InlineStack gap="300" blockAlign="center">
+                                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                                        <Checkbox
+                                                                            checked={allSelected ? true : (indeterminate ? 'indeterminate' : false)}
+                                                                            onChange={checked => handleProductCheckbox(group.product, checked)}
+                                                                            label=""
+                                                                            labelHidden
+                                                                        />
+                                                                    </div>
+                                                                    <div className={styles.productImage}>
+                                                                        <Thumbnail
+                                                                            source={group.product.images?.[0]?.url ? group.product.images[0].url : ImageIcon}
+                                                                            alt={group.product.images?.[0]?.altText ? group.product.images[0].altText : group.product.title}
+                                                                            size="small"
+                                                                        />
+                                                                    </div>
+                                                                    <BlockStack gap="100">
+                                                                        <Text variant="bodyMd" as="h3" fontWeight="semibold">
+                                                                            {group.product.title}
+                                                                        </Text>
+                                                                        <Text as="span" variant="bodySm" tone="subdued">
+                                                                            {group.product.vendor} • {group.product.productType}
+                                                                        </Text>
+                                                                    </BlockStack>
+                                                                </InlineStack>
+                                                                <Badge tone="info">
+                                                                    {selectedCount} of {variantIds.length} variants
+                                                                </Badge>
+                                                            </InlineStack>
                                                         </div>
-                                                    );
-                                                })}
-                                            </BlockStack>
-                                        </BlockStack>
-                                    </Card>
-                                </div>
-                            );
-                        })}
+                                                    </div>
+                                                    <BlockStack gap="200">
+                                                        {group.variants.map((variant) => {
+                                                            const isChecked = selectedVariantIds.includes(variant.id);
+                                                            const newSku = generujPojedynczeSKU(zasady, variant, globalVariantIndex);
+                                                            const variantOptions = variant.selectedOptions
+                                                                .map(opt => `${opt.name}: ${opt.value}`)
+                                                                .join(', ');
+                                                            globalVariantIndex++;
+                                                            return (
+                                                                <div key={variant.id} className={styles.variantCard}>
+                                                                    <Card padding="300" background="bg-surface-secondary">
+                                                                        <div
+                                                                            onClick={() => handleVariantCheckbox(variant.id, !isChecked)}
+                                                                            className={styles.clickableRow}
+                                                                        >
+                                                                            <InlineStack align="space-between" blockAlign="center">
+                                                                                <InlineStack gap="300" blockAlign="center">
+                                                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                                                        <Checkbox
+                                                                                            checked={isChecked}
+                                                                                            onChange={checked => handleVariantCheckbox(variant.id, checked)}
+                                                                                            label=""
+                                                                                            labelHidden
+                                                                                        />
+                                                                                    </div>
+                                                                                    <BlockStack gap="100">
+                                                                                        <Text variant="bodySm" as="span" fontWeight="medium">
+                                                                                            {variant.title}
+                                                                                        </Text>
+                                                                                        {variantOptions && (
+                                                                                            <div className={styles.variantOptions}>
+                                                                                                <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                    {variantOptions}
+                                                                                                </Text>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </BlockStack>
+                                                                                </InlineStack>
+                                                                                <div className={styles.skuComparison}>
+                                                                                    <BlockStack gap="100" align="end">
+                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                            <div className={styles.currentSku}>
+                                                                                                <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                    Current:
+                                                                                                </Text>
+                                                                                            </div>
+                                                                                            <Text as="span" variant="bodySm" fontWeight="medium">
+                                                                                                {variant.sku || "No SKU"}
+                                                                                            </Text>
+                                                                                        </InlineStack>
+                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                            <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                New:
+                                                                                            </Text>
+                                                                                            <div className={styles.newSku}>
+                                                                                                <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
+                                                                                                    {newSku}
+                                                                                                </Text>
+                                                                                            </div>
+                                                                                        </InlineStack>
+                                                                                    </BlockStack>
+                                                                                </div>
+                                                                            </InlineStack>
+                                                                        </div>
+                                                                    </Card>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </BlockStack>
+                                                </BlockStack>
+                                            </Card>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </BlockStack>
+                        <Divider />
+                        <BlockStack>
+                            <div className={styles.generateButton}>
+                                <Button
+                                    variant="primary"
+                                    size="large"
+                                    submit
+                                    disabled={wybraneWariantyDoZapisu.length === 0}
+                                >
+                                    Generate SKUs for {wybraneWariantyDoZapisu.length} variant{wybraneWariantyDoZapisu.length === 1 ? '' : 's'}
+                                </Button>
+                            </div>
+                        </BlockStack>
                     </BlockStack>
-
-                    <Divider />
-
-                    {/* Generate Button */}
-                    <BlockStack>
-                        <div className={styles.generateButton}>
-                            <Button
-                                variant="primary"
-                                size="large"
-                                submit
-                                disabled={wybraneWariantyDoZapisu.length === 0}
-                            >
-                                Generate SKUs for {wybraneWariantyDoZapisu.length} variant{wybraneWariantyDoZapisu.length === 1 ? '' : 's'}
-                            </Button>
-                        </div>
-                    </BlockStack>
-                </BlockStack>
-            </Form>
-        </Card>
+                </Form>
+            </Card>
+            {showToast && (
+                <Toast
+                    content={toastMessage}
+                    onDismiss={() => setShowToast(false)}
+                />
+            )}
+        </>
     );
 } 

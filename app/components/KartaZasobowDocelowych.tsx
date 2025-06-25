@@ -6,7 +6,6 @@ import {
     Button,
     InlineStack,
     Badge,
-    ChoiceList,
     Divider,
 } from "@shopify/polaris";
 

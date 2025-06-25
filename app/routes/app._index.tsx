@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, redirect } from "@remix-run/react";
 import {
   Page,
-  BlockStack,
+  Frame,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -266,33 +266,34 @@ export default function Index() {
   };
 
   return (
-    <Page fullWidth>
-      <TitleBar title="SKU Generator" />
-
-      <div className={styles.layoutContainer}>
-        <div className={styles.mainContent}>
-          <div className={styles.gridCards}>
-            <div>
-              <KartaZasobowDocelowych />
-              <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
-              <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
-            </div>
-            <div>
-              <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
-              <PodgladProduktow
-                zasady={zasady}
-                products={products}
-                selectedVariantIds={selectedVariantIds}
-                setSelectedVariantIds={setSelectedVariantIds}
-                scope={scope}
-              />
+    <Frame>
+      <Page fullWidth>
+        <TitleBar title="SKU Generator" />
+        <div className={styles.layoutContainer}>
+          <div className={styles.mainContent}>
+            <div className={styles.gridCards}>
+              <div>
+                <KartaZasobowDocelowych />
+                <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
+                <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
+              </div>
+              <div>
+                <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
+                <PodgladProduktow
+                  zasady={zasady}
+                  products={products}
+                  selectedVariantIds={selectedVariantIds}
+                  setSelectedVariantIds={setSelectedVariantIds}
+                  scope={scope}
+                />
+              </div>
             </div>
           </div>
+          <div className={styles.sidebar}>
+            <PodgladSKU zasady={zasady} />
+          </div>
         </div>
-        <div className={styles.sidebar}>
-          <PodgladSKU zasady={zasady} />
-        </div>
-      </div>
-    </Page>
+      </Page>
+    </Frame>
   );
 }

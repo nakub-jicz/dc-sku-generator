@@ -1,5 +1,15 @@
-import { Card, BlockStack, Text, InlineStack, Badge, Divider, Icon } from "@shopify/polaris";
-import { ViewIcon } from "@shopify/polaris-icons";
+import { useState } from "react";
+import {
+    Card,
+    Text,
+    BlockStack,
+    InlineStack,
+    Button,
+    Collapsible,
+    Badge,
+    Divider,
+    Box,
+} from "@shopify/polaris";
 import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 
 interface PodgladSKUProps {
