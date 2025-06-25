@@ -221,11 +221,29 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     // Policz produkty z wariantami vs. bez wariantów
     const productsWithVariants = groupedByProduct.filter(g => g.hasRealVariants).length;
     const productsWithoutVariants = groupedByProduct.filter(g => !g.hasRealVariants).length;
-    const totalItemsDescription = productsWithVariants > 0 && productsWithoutVariants > 0
-        ? `${allVariantIds.length} items (${productsWithVariants} products with variants, ${productsWithoutVariants} simple products)`
-        : productsWithVariants > 0
-            ? `${allVariantIds.length} variants from ${productsWithVariants} products`
-            : `${productsWithoutVariants} products`;
+
+    // Ujednolicona logika opisu produktów
+    const getStatusDescription = () => {
+        if (displayVariants.length === 0) return "No products loaded";
+
+        const selectedCount = selectedVariantIds.filter(id => allVariantIds.includes(id)).length;
+        const totalProducts = groupedByProduct.length;
+        const totalVariants = allVariantIds.length;
+
+        if (totalProducts === 1) {
+            // Jeden produkt
+            return `${selectedCount} of ${totalVariants} ${totalVariants === 1 ? 'item' : 'variants'} selected`;
+        } else {
+            // Wiele produktów
+            if (productsWithVariants > 0 && productsWithoutVariants === 0) {
+                return `${selectedCount} of ${totalVariants} variants selected from ${totalProducts} products`;
+            } else if (productsWithVariants === 0 && productsWithoutVariants > 0) {
+                return `${selectedCount} of ${totalProducts} products selected`;
+            } else {
+                return `${selectedCount} of ${totalVariants} items selected from ${totalProducts} products`;
+            }
+        }
+    };
 
     // Obsługa zaznaczania pojedynczego wariantu
     const handleVariantCheckbox = (variantId: string, checked: boolean) => {
@@ -341,31 +359,47 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                     <input type="hidden" name="zasady" value={JSON.stringify(zasady)} />
                     <input type="hidden" name="warianty" value={JSON.stringify(wybraneWariantyDoZapisu)} />
                     <BlockStack gap="400">
-                        <InlineStack align="space-between">
-                            <BlockStack gap="200">
-                                <Text variant="headingMd" as="h2">
-                                    Product Preview
-                                </Text>
-                                <Text as="p" variant="bodySm" tone="subdued">
-                                    {`${selectedVariantIds.filter(id => allVariantIds.includes(id)).length} of ${totalItemsDescription} selected`}
-                                </Text>
-                            </BlockStack>
-                            <InlineStack gap="200">
-                                <Button onClick={handleProductSelection} variant="secondary" loading={isLoading}>
-                                    Select Products
-                                </Button>
-                                <Button onClick={handleReset} variant="tertiary">
-                                    All Products
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    submit
-                                    disabled={wybraneWariantyDoZapisu.length === 0}
-                                >
-                                    {`Generate SKUs (${wybraneWariantyDoZapisu.length})`}
-                                </Button>
+                        <div className={styles.headerSection}>
+                            <InlineStack align="space-between" blockAlign="center" gap="600">
+                                <InlineStack gap="300" blockAlign="baseline">
+                                    <Text variant="headingMd" as="h2">
+                                        Product Preview
+                                    </Text>
+                                    <div className={styles.statusContainer}>
+                                        <Text as="span" variant="bodySm" tone="subdued">
+                                            {getStatusDescription()}
+                                        </Text>
+                                    </div>
+                                </InlineStack>
+                                <div className={styles.buttonContainer}>
+                                    <InlineStack gap="200" blockAlign="center">
+                                        <Button
+                                            onClick={handleProductSelection}
+                                            variant="secondary"
+                                            loading={isLoading}
+                                            size="medium"
+                                        >
+                                            Select Products
+                                        </Button>
+                                        <Button
+                                            onClick={handleReset}
+                                            variant="tertiary"
+                                            size="medium"
+                                        >
+                                            All Products
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            submit
+                                            disabled={wybraneWariantyDoZapisu.length === 0}
+                                            size="medium"
+                                        >
+                                            {`Generate SKUs (${wybraneWariantyDoZapisu.length})`}
+                                        </Button>
+                                    </InlineStack>
+                                </div>
                             </InlineStack>
-                        </InlineStack>
+                        </div>
                         <Divider />
 
                         {displayVariants.length === 0 ? (
@@ -384,7 +418,10 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                         onChange={handleSelectAll}
                                     />
                                     <Text as="span" variant="bodySm" tone="subdued">
-                                        Select all {totalItemsDescription}
+                                        Select all {groupedByProduct.length === 1
+                                            ? (allVariantIds.length === 1 ? 'item' : 'variants')
+                                            : `${allVariantIds.length} items`
+                                        }
                                     </Text>
                                 </InlineStack>
                                 <Divider />

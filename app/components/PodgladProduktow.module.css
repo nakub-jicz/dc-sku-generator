@@ -140,3 +140,38 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Header section styles for consistency */
+.headerSection {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.statusContainer {
+    display: flex;
+    align-items: baseline;
+}
+
+.buttonContainer {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Zapewnia że przyciski mają stałą szerokość */
+.buttonContainer button {
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+/* Dodatkowe style dla lepszej spójności */
+.headerSection h2 {
+    margin: 0;
+    line-height: 1.3;
+}
+
+.statusContainer p {
+    margin: 0;
+    line-height: 1.4;
+}
