@@ -79,16 +79,31 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
 
 
 
-    // Grupowanie wariantów po produkcie
+    // Grupowanie wariantów po produkcie z rozróżnieniem na produkty z wariantami i bez
     const groupedByProduct = useMemo(() => {
-        const map = new Map<string, { product: ProductVariant["product"], variants: ProductVariant[] }>();
+        const map = new Map<string, {
+            product: ProductVariant["product"],
+            variants: ProductVariant[],
+            hasRealVariants: boolean
+        }>();
+
         for (const variant of displayVariants) {
             const pid = variant.product.id;
             if (!map.has(pid)) {
-                map.set(pid, { product: variant.product, variants: [] });
+                map.set(pid, { product: variant.product, variants: [], hasRealVariants: false });
             }
             map.get(pid)!.variants.push(variant);
         }
+
+        // Sprawdź które produkty mają rzeczywiste warianty (więcej niż 1 lub nie "Default Title")
+        for (const group of map.values()) {
+            const hasMultipleVariants = group.variants.length > 1;
+            const hasDefaultTitleOnly = group.variants.length === 1 &&
+                group.variants[0].title === "Default Title";
+
+            group.hasRealVariants = hasMultipleVariants || !hasDefaultTitleOnly;
+        }
+
         return Array.from(map.values());
     }, [displayVariants]);
 
@@ -202,6 +217,15 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
 
     const allItemsSelected = allVariantIds.length > 0 && selectedVariantIds.length === allVariantIds.length;
     const someItemsSelected = selectedVariantIds.length > 0 && !allItemsSelected;
+
+    // Policz produkty z wariantami vs. bez wariantów
+    const productsWithVariants = groupedByProduct.filter(g => g.hasRealVariants).length;
+    const productsWithoutVariants = groupedByProduct.filter(g => !g.hasRealVariants).length;
+    const totalItemsDescription = productsWithVariants > 0 && productsWithoutVariants > 0
+        ? `${allVariantIds.length} items (${productsWithVariants} products with variants, ${productsWithoutVariants} simple products)`
+        : productsWithVariants > 0
+            ? `${allVariantIds.length} variants from ${productsWithVariants} products`
+            : `${productsWithoutVariants} products`;
 
     // Obsługa zaznaczania pojedynczego wariantu
     const handleVariantCheckbox = (variantId: string, checked: boolean) => {
@@ -323,7 +347,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                     Product Preview
                                 </Text>
                                 <Text as="p" variant="bodySm" tone="subdued">
-                                    {`${selectedVariantIds.filter(id => allVariantIds.includes(id)).length} of ${allVariantIds.length} variants selected`}
+                                    {`${selectedVariantIds.filter(id => allVariantIds.includes(id)).length} of ${totalItemsDescription} selected`}
                                 </Text>
                             </BlockStack>
                             <InlineStack gap="200">
@@ -332,6 +356,13 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                 </Button>
                                 <Button onClick={handleReset} variant="tertiary">
                                     All Products
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    submit
+                                    disabled={wybraneWariantyDoZapisu.length === 0}
+                                >
+                                    {`Generate SKUs (${wybraneWariantyDoZapisu.length})`}
                                 </Button>
                             </InlineStack>
                         </InlineStack>
@@ -353,7 +384,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                         onChange={handleSelectAll}
                                     />
                                     <Text as="span" variant="bodySm" tone="subdued">
-                                        Select all {allVariantIds.length} variants
+                                        Select all {totalItemsDescription}
                                     </Text>
                                 </InlineStack>
                                 <Divider />
@@ -402,7 +433,10 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                                                         </InlineStack>
                                                                         <InlineStack gap="200" blockAlign="center">
                                                                             <Badge tone="info">
-                                                                                {`${selectedCount} of ${variantIds.length} variants`}
+                                                                                {group.hasRealVariants
+                                                                                    ? `${selectedCount} of ${variantIds.length} variants`
+                                                                                    : selectedCount > 0 ? "Selected" : "Not selected"
+                                                                                }
                                                                             </Badge>
                                                                             <div className={styles.removeButton}>
                                                                                 <Button
@@ -418,87 +452,170 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                                                     </InlineStack>
                                                                 </div>
                                                             </div>
-                                                            <BlockStack gap="200">
-                                                                {group.variants.map((variant) => {
+
+                                                            {/* Dla produktów bez rzeczywistych wariantów pokazuj jako pojedynczy "wariant" */}
+                                                            {!group.hasRealVariants ? (
+                                                                (() => {
+                                                                    const variant = group.variants[0];
                                                                     const isChecked = selectedVariantIds.includes(variant.id);
                                                                     const newSku = generujPojedynczeSKU(zasady, variant, globalVariantIndex);
-                                                                    const variantOptions = variant.selectedOptions
-                                                                        .map(opt => `${opt.name}: ${opt.value}`)
-                                                                        .join(', ');
                                                                     globalVariantIndex++;
                                                                     return (
-                                                                        <div key={variant.id} className={styles.variantCard}>
-                                                                            <Card padding="300" background="bg-surface-secondary">
-                                                                                <div
-                                                                                    onClick={() => handleVariantCheckbox(variant.id, !isChecked)}
-                                                                                    className={styles.clickableRow}
-                                                                                >
-                                                                                    <InlineStack align="space-between" blockAlign="center">
-                                                                                        <InlineStack gap="300" blockAlign="center">
-                                                                                            <div onClick={(e) => e.stopPropagation()}>
-                                                                                                <Checkbox
-                                                                                                    checked={isChecked}
-                                                                                                    onChange={checked => handleVariantCheckbox(variant.id, checked)}
-                                                                                                    label=""
-                                                                                                    labelHidden
-                                                                                                />
-                                                                                            </div>
-                                                                                            <BlockStack gap="100">
-                                                                                                <Text variant="bodySm" as="span" fontWeight="medium">
-                                                                                                    {variant.title}
-                                                                                                </Text>
-                                                                                                {variantOptions && (
+                                                                        <BlockStack gap="200">
+                                                                            <div className={styles.variantCard}>
+                                                                                <Card padding="300" background="bg-surface-secondary">
+                                                                                    <div
+                                                                                        onClick={() => handleVariantCheckbox(variant.id, !isChecked)}
+                                                                                        className={styles.clickableRow}
+                                                                                    >
+                                                                                        <InlineStack align="space-between" blockAlign="center">
+                                                                                            <InlineStack gap="300" blockAlign="center">
+                                                                                                <div onClick={(e) => e.stopPropagation()}>
+                                                                                                    <Checkbox
+                                                                                                        checked={isChecked}
+                                                                                                        onChange={checked => handleVariantCheckbox(variant.id, checked)}
+                                                                                                        label=""
+                                                                                                        labelHidden
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <BlockStack gap="100">
+                                                                                                    <Text variant="bodySm" as="span" fontWeight="medium">
+                                                                                                        Product SKU
+                                                                                                    </Text>
                                                                                                     <div className={styles.variantOptions}>
                                                                                                         <Text as="span" variant="bodySm" tone="subdued">
-                                                                                                            {variantOptions}
+                                                                                                            Simple product (no variants)
                                                                                                         </Text>
                                                                                                     </div>
-                                                                                                )}
-                                                                                            </BlockStack>
-                                                                                        </InlineStack>
-                                                                                        <InlineStack gap="200" blockAlign="center">
-                                                                                            <div className={styles.skuComparison}>
-                                                                                                <BlockStack gap="100" align="end">
-                                                                                                    <InlineStack gap="200" blockAlign="center">
-                                                                                                        <div className={styles.currentSku}>
-                                                                                                            <Text as="span" variant="bodySm" tone="subdued">
-                                                                                                                Current:
-                                                                                                            </Text>
-                                                                                                        </div>
-                                                                                                        <Text as="span" variant="bodySm" fontWeight="medium">
-                                                                                                            {variant.sku || "No SKU"}
-                                                                                                        </Text>
-                                                                                                    </InlineStack>
-                                                                                                    <InlineStack gap="200" blockAlign="center">
-                                                                                                        <Text as="span" variant="bodySm" tone="subdued">
-                                                                                                            New:
-                                                                                                        </Text>
-                                                                                                        <div className={styles.newSku}>
-                                                                                                            <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
-                                                                                                                {newSku}
-                                                                                                            </Text>
-                                                                                                        </div>
-                                                                                                    </InlineStack>
                                                                                                 </BlockStack>
-                                                                                            </div>
-                                                                                            <div className={styles.removeButton}>
-                                                                                                <Button
-                                                                                                    variant="plain"
-                                                                                                    size="micro"
-                                                                                                    icon={XIcon}
-                                                                                                    onClick={() => handleRemoveVariant(variant.id)}
-                                                                                                    accessibilityLabel="Remove variant"
-                                                                                                    tone="critical"
-                                                                                                />
-                                                                                            </div>
+                                                                                            </InlineStack>
+                                                                                            <InlineStack gap="200" blockAlign="center">
+                                                                                                <div className={styles.skuComparison}>
+                                                                                                    <BlockStack gap="100" align="end">
+                                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                                            <div className={styles.currentSku}>
+                                                                                                                <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                                    Current:
+                                                                                                                </Text>
+                                                                                                            </div>
+                                                                                                            <Text as="span" variant="bodySm" fontWeight="medium">
+                                                                                                                {variant.sku || "No SKU"}
+                                                                                                            </Text>
+                                                                                                        </InlineStack>
+                                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                                            <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                                New:
+                                                                                                            </Text>
+                                                                                                            <div className={styles.newSku}>
+                                                                                                                <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
+                                                                                                                    {newSku}
+                                                                                                                </Text>
+                                                                                                            </div>
+                                                                                                        </InlineStack>
+                                                                                                    </BlockStack>
+                                                                                                </div>
+                                                                                                <div className={styles.removeButton}>
+                                                                                                    <Button
+                                                                                                        variant="plain"
+                                                                                                        size="micro"
+                                                                                                        icon={XIcon}
+                                                                                                        onClick={() => handleRemoveVariant(variant.id)}
+                                                                                                        accessibilityLabel="Remove product"
+                                                                                                        tone="critical"
+                                                                                                    />
+                                                                                                </div>
+                                                                                            </InlineStack>
                                                                                         </InlineStack>
-                                                                                    </InlineStack>
-                                                                                </div>
-                                                                            </Card>
-                                                                        </div>
+                                                                                    </div>
+                                                                                </Card>
+                                                                            </div>
+                                                                        </BlockStack>
                                                                     );
-                                                                })}
-                                                            </BlockStack>
+                                                                })()
+                                                            ) : (
+                                                                /* Dla produktów z rzeczywistymi wariantami pokazuj listę wariantów */
+                                                                <BlockStack gap="200">
+                                                                    {group.variants.map((variant) => {
+                                                                        const isChecked = selectedVariantIds.includes(variant.id);
+                                                                        const newSku = generujPojedynczeSKU(zasady, variant, globalVariantIndex);
+                                                                        const variantOptions = variant.selectedOptions
+                                                                            .map(opt => `${opt.name}: ${opt.value}`)
+                                                                            .join(', ');
+                                                                        globalVariantIndex++;
+                                                                        return (
+                                                                            <div key={variant.id} className={styles.variantCard}>
+                                                                                <Card padding="300" background="bg-surface-secondary">
+                                                                                    <div
+                                                                                        onClick={() => handleVariantCheckbox(variant.id, !isChecked)}
+                                                                                        className={styles.clickableRow}
+                                                                                    >
+                                                                                        <InlineStack align="space-between" blockAlign="center">
+                                                                                            <InlineStack gap="300" blockAlign="center">
+                                                                                                <div onClick={(e) => e.stopPropagation()}>
+                                                                                                    <Checkbox
+                                                                                                        checked={isChecked}
+                                                                                                        onChange={checked => handleVariantCheckbox(variant.id, checked)}
+                                                                                                        label=""
+                                                                                                        labelHidden
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <BlockStack gap="100">
+                                                                                                    <Text variant="bodySm" as="span" fontWeight="medium">
+                                                                                                        {variant.title}
+                                                                                                    </Text>
+                                                                                                    {variantOptions && (
+                                                                                                        <div className={styles.variantOptions}>
+                                                                                                            <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                                {variantOptions}
+                                                                                                            </Text>
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </BlockStack>
+                                                                                            </InlineStack>
+                                                                                            <InlineStack gap="200" blockAlign="center">
+                                                                                                <div className={styles.skuComparison}>
+                                                                                                    <BlockStack gap="100" align="end">
+                                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                                            <div className={styles.currentSku}>
+                                                                                                                <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                                    Current:
+                                                                                                                </Text>
+                                                                                                            </div>
+                                                                                                            <Text as="span" variant="bodySm" fontWeight="medium">
+                                                                                                                {variant.sku || "No SKU"}
+                                                                                                            </Text>
+                                                                                                        </InlineStack>
+                                                                                                        <InlineStack gap="200" blockAlign="center">
+                                                                                                            <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                                New:
+                                                                                                            </Text>
+                                                                                                            <div className={styles.newSku}>
+                                                                                                                <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
+                                                                                                                    {newSku}
+                                                                                                                </Text>
+                                                                                                            </div>
+                                                                                                        </InlineStack>
+                                                                                                    </BlockStack>
+                                                                                                </div>
+                                                                                                <div className={styles.removeButton}>
+                                                                                                    <Button
+                                                                                                        variant="plain"
+                                                                                                        size="micro"
+                                                                                                        icon={XIcon}
+                                                                                                        onClick={() => handleRemoveVariant(variant.id)}
+                                                                                                        accessibilityLabel="Remove variant"
+                                                                                                        tone="critical"
+                                                                                                    />
+                                                                                                </div>
+                                                                                            </InlineStack>
+                                                                                        </InlineStack>
+                                                                                    </div>
+                                                                                </Card>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </BlockStack>
+                                                            )}
                                                         </BlockStack>
                                                     </Card>
                                                 </div>
@@ -509,19 +626,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                             </>
                         )}
 
-                        <Divider />
-                        <BlockStack>
-                            <div className={styles.generateButton}>
-                                <Button
-                                    variant="primary"
-                                    size="large"
-                                    submit
-                                    disabled={wybraneWariantyDoZapisu.length === 0}
-                                >
-                                    {`Generate SKUs for ${wybraneWariantyDoZapisu.length} variant${wybraneWariantyDoZapisu.length === 1 ? '' : 's'}`}
-                                </Button>
-                            </div>
-                        </BlockStack>
+
                     </BlockStack>
                 </Form>
             </Card>

@@ -4,6 +4,7 @@ import { useLoaderData, redirect } from "@remix-run/react";
 import {
   Page,
   Frame,
+  BlockStack,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -227,11 +228,11 @@ export default function Index() {
         <div className={styles.layoutContainer}>
           <div className={styles.mainContent}>
             <div className={styles.gridCards}>
-              <div>
+              <BlockStack gap="400">
                 <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
                 <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
-              </div>
-              <div>
+              </BlockStack>
+              <BlockStack gap="400">
                 <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
                 <PodgladProduktow
                   zasady={zasady}
@@ -240,7 +241,7 @@ export default function Index() {
                   setSelectedVariantIds={setSelectedVariantIds}
                   scope={scope}
                 />
-              </div>
+              </BlockStack>
             </div>
           </div>
           <div className={styles.sidebar}>
