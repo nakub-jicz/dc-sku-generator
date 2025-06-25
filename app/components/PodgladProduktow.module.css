@@ -92,6 +92,35 @@
     font-size: 13px;
 }
 
+/* Style dla przycisków usuwania */
+.removeButton {
+    opacity: 0.3;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.productCard:hover .removeButton,
+.variantCard:hover .removeButton {
+    opacity: 1;
+}
+
+.removeButton:hover {
+    opacity: 1 !important;
+    background-color: var(--p-surface-critical-subdued) !important;
+    transform: scale(1.1);
+}
+
+/* Dodatkowe style dla subtelnego UX */
+.productHeader:hover .removeButton,
+.clickableRow:hover .removeButton {
+    opacity: 0.8;
+}
+
+.removeButton:focus {
+    opacity: 1 !important;
+    outline: 2px solid var(--p-border-critical);
+    outline-offset: 1px;
+}
+
 .generateButton {
     margin-top: 24px;
     padding: 16px;

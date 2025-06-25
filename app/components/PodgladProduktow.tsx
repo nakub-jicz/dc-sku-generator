@@ -14,7 +14,7 @@ import {
     EmptyState,
     Toast,
 } from "@shopify/polaris";
-import { ImageIcon } from "@shopify/polaris-icons";
+import { ImageIcon, XIcon } from "@shopify/polaris-icons";
 import styles from './PodgladProduktow.module.css';
 import type { Dispatch, SetStateAction } from "react";
 
@@ -63,9 +63,10 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     const [isLoading, setIsLoading] = useState(false);
     const [pickedVariants, setPickedVariants] = useState<ProductVariant[] | null>(null);
     const [, setPickedProducts] = useState<any[]>([]);
+    const [hiddenProductIds, setHiddenProductIds] = useState<Set<string>>(new Set());
 
-    // Use pickedVariants if set, otherwise fallback to loader products
-    const displayVariants = pickedVariants ?? products;
+    // Use pickedVariants if set, otherwise fallback to loader products (filtered by hidden)
+    const displayVariants = (pickedVariants ?? products).filter(variant => !hiddenProductIds.has(variant.product.id));
 
     // Reset pickedVariants only when scope changes to 'all'
     useEffect(() => {
@@ -74,6 +75,8 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
             console.log('Resetting pickedVariants because scope=all');
             setPickedVariants(null);
         }
+        // Reset hidden products when scope changes
+        setHiddenProductIds(new Set());
         // Gdy scope='products' albo 'none' - nie resetuj pickedVariants
     }, [scope]); // Usuwam products.length i pickedVariants z dependencies żeby uniknąć niepotrzebnych re-renderów
 
@@ -216,6 +219,53 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         setSelectedVariantIds(() => (checked ? allVariantIds : []));
     };
 
+    // Usuwanie całego produktu (wszystkich jego wariantów)
+    const handleRemoveProduct = (productId: string) => {
+        if (pickedVariants) {
+            // Jeśli mamy wybrane produkty, usuń z nich
+            const updatedVariants = pickedVariants.filter(variant => variant.product.id !== productId);
+            setPickedVariants(updatedVariants);
+        } else {
+            // Jeśli pokazujemy wszystkie produkty, dodaj do ukrytych
+            setHiddenProductIds(prev => new Set([...prev, productId]));
+        }
+
+        // Usuń także zaznaczenia dla usuniętych wariantów
+        const removedVariantIds = displayVariants
+            .filter(variant => variant.product.id === productId)
+            .map(variant => variant.id);
+
+        setSelectedVariantIds(prev => prev.filter(id => !removedVariantIds.includes(id)));
+
+        setShowToast(true);
+        setToastMessage("Product removed from selection");
+    };
+
+    // Usuwanie pojedynczego wariantu
+    const handleRemoveVariant = (variantId: string) => {
+        if (pickedVariants) {
+            // Jeśli mamy wybrane produkty, usuń z nich
+            const updatedVariants = pickedVariants.filter(variant => variant.id !== variantId);
+            setPickedVariants(updatedVariants);
+        } else {
+            // Jeśli pokazujemy wszystkie produkty, znajdź produkt tego wariantu i ukryj go
+            const variant = displayVariants.find(v => v.id === variantId);
+            if (variant) {
+                const productVariants = displayVariants.filter(v => v.product.id === variant.product.id);
+                // Jeśli to ostatni wariant produktu, ukryj cały produkt
+                if (productVariants.length === 1) {
+                    setHiddenProductIds(prev => new Set([...prev, variant.product.id]));
+                }
+            }
+        }
+
+        // Zawsze usuń zaznaczenie dla usuniętego wariantu
+        setSelectedVariantIds(prev => prev.filter(id => id !== variantId));
+
+        setShowToast(true);
+        setToastMessage("Variant removed from selection");
+    };
+
     const wybraneWariantyDoZapisu = displayVariants.filter(v => selectedVariantIds.includes(v.id));
 
     // Renderowanie pustego stanu
@@ -315,9 +365,21 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                                                         </Text>
                                                                     </BlockStack>
                                                                 </InlineStack>
-                                                                <Badge tone="info">
-                                                                    {selectedCount} of {variantIds.length} variants
-                                                                </Badge>
+                                                                <InlineStack gap="200" blockAlign="center">
+                                                                    <Badge tone="info">
+                                                                        {selectedCount} of {variantIds.length} variants
+                                                                    </Badge>
+                                                                    <div className={styles.removeButton}>
+                                                                        <Button
+                                                                            variant="plain"
+                                                                            size="micro"
+                                                                            icon={XIcon}
+                                                                            onClick={() => handleRemoveProduct(group.product.id)}
+                                                                            accessibilityLabel="Remove product"
+                                                                            tone="critical"
+                                                                        />
+                                                                    </div>
+                                                                </InlineStack>
                                                             </InlineStack>
                                                         </div>
                                                     </div>
@@ -359,30 +421,42 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                                                                         )}
                                                                                     </BlockStack>
                                                                                 </InlineStack>
-                                                                                <div className={styles.skuComparison}>
-                                                                                    <BlockStack gap="100" align="end">
-                                                                                        <InlineStack gap="200" blockAlign="center">
-                                                                                            <div className={styles.currentSku}>
+                                                                                <InlineStack gap="200" blockAlign="center">
+                                                                                    <div className={styles.skuComparison}>
+                                                                                        <BlockStack gap="100" align="end">
+                                                                                            <InlineStack gap="200" blockAlign="center">
+                                                                                                <div className={styles.currentSku}>
+                                                                                                    <Text as="span" variant="bodySm" tone="subdued">
+                                                                                                        Current:
+                                                                                                    </Text>
+                                                                                                </div>
+                                                                                                <Text as="span" variant="bodySm" fontWeight="medium">
+                                                                                                    {variant.sku || "No SKU"}
+                                                                                                </Text>
+                                                                                            </InlineStack>
+                                                                                            <InlineStack gap="200" blockAlign="center">
                                                                                                 <Text as="span" variant="bodySm" tone="subdued">
-                                                                                                    Current:
+                                                                                                    New:
                                                                                                 </Text>
-                                                                                            </div>
-                                                                                            <Text as="span" variant="bodySm" fontWeight="medium">
-                                                                                                {variant.sku || "No SKU"}
-                                                                                            </Text>
-                                                                                        </InlineStack>
-                                                                                        <InlineStack gap="200" blockAlign="center">
-                                                                                            <Text as="span" variant="bodySm" tone="subdued">
-                                                                                                New:
-                                                                                            </Text>
-                                                                                            <div className={styles.newSku}>
-                                                                                                <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
-                                                                                                    {newSku}
-                                                                                                </Text>
-                                                                                            </div>
-                                                                                        </InlineStack>
-                                                                                    </BlockStack>
-                                                                                </div>
+                                                                                                <div className={styles.newSku}>
+                                                                                                    <Text as="span" variant="bodySm" fontWeight="semibold" tone="success">
+                                                                                                        {newSku}
+                                                                                                    </Text>
+                                                                                                </div>
+                                                                                            </InlineStack>
+                                                                                        </BlockStack>
+                                                                                    </div>
+                                                                                    <div className={styles.removeButton}>
+                                                                                        <Button
+                                                                                            variant="plain"
+                                                                                            size="micro"
+                                                                                            icon={XIcon}
+                                                                                            onClick={() => handleRemoveVariant(variant.id)}
+                                                                                            accessibilityLabel="Remove variant"
+                                                                                            tone="critical"
+                                                                                        />
+                                                                                    </div>
+                                                                                </InlineStack>
                                                                             </InlineStack>
                                                                         </div>
                                                                     </Card>
