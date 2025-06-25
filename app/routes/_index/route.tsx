@@ -22,9 +22,10 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>A short heading about [your app]</h1>
+        <h1 className={styles.heading}>DC SKU Generator</h1>
         <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+          Automate SKU code generation for Shopify products.
+          Save time and maintain consistent naming across your entire store.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">
@@ -40,16 +41,29 @@ export default function App() {
         )}
         <ul className={styles.list}>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Automatic SKU code generation</strong>. Create consistent
+            and unique SKU codes for all product variants without manual
+            work on each product.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Configurable naming rules</strong>. Set custom
+            prefixes, suffixes, and numbering methods to match
+            your product organization strategy.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Real-time preview</strong>. See how generated
+            SKU codes will look before applying them to your store,
+            eliminating the risk of errors.
+          </li>
+          <li>
+            <strong>Multiple format support</strong>. Choose between
+            sequential or random numbering, customize separators, and add
+            components describing product attributes.
+          </li>
+          <li>
+            <strong>Built for Shopify 2025</strong>. Optimized for performance
+            with the latest Polaris design system and following UX best practices
+            for seamless integration with Shopify Admin.
           </li>
         </ul>
       </div>

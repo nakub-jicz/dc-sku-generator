@@ -1,5 +1,22 @@
 {
   "name": "dc-sku-generator",
+  "version": "1.0.0",
+  "description": "Professional tool for automatically generating SKU codes for Shopify products. Save time and maintain consistent naming across your store.",
+  "keywords": [
+    "shopify",
+    "sku-generator",
+    "inventory-management",
+    "automation",
+    "built-for-shopify",
+    "polaris",
+    "product-organization"
+  ],
+  "homepage": "https://github.com/your-organization/dc-sku-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-organization/dc-sku-generator.git"
+  },
+  "license": "MIT",
   "private": true,
   "scripts": {
     "build": "remix vite:build",
@@ -72,5 +89,28 @@
     "@graphql-codegen/typescript-operations": "4.5.0",
     "minimatch": "9.0.5"
   },
-  "author": "jakub"
+  "author": {
+    "name": "DC Development Team",
+    "email": "support@dcskugenerator.com",
+    "url": "https://dcskugenerator.com"
+  },
+  "contributors": [
+    {
+      "name": "Jakub",
+      "role": "Lead Developer"
+    }
+  ],
+  "engines": {
+    "node": ">=18.20.0",
+    "npm": ">=8.0.0"
+  },
+  "shopify": {
+    "builtForShopify": true,
+    "polarisVersion": "12.0.0",
+    "compliance": {
+      "builForShopify2025": true,
+      "accessibility": "WCAG 2.1 AA",
+      "performance": "Core Web Vitals"
+    }
+  }
 }

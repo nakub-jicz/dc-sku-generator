@@ -3,7 +3,7 @@
 client_id = "63a90b4861df9c446f00454b3de19a2a"
 name = "DC SKU Generator"
 handle = "dc-sku-generator"
-application_url = "https://confirmed-bacterial-smoke-racks.trycloudflare.com"
+application_url = "https://no-measured-finnish-cigarette.trycloudflare.com"
 embedded = true
 
 [build]
@@ -27,9 +27,9 @@ scopes = "read_products,write_products"
 
 [auth]
 redirect_urls = [
-  "https://confirmed-bacterial-smoke-racks.trycloudflare.com/auth/callback",
-  "https://confirmed-bacterial-smoke-racks.trycloudflare.com/auth/shopify/callback",
-  "https://confirmed-bacterial-smoke-racks.trycloudflare.com/api/auth/callback"
+  "https://no-measured-finnish-cigarette.trycloudflare.com/auth/callback",
+  "https://no-measured-finnish-cigarette.trycloudflare.com/auth/shopify/callback",
+  "https://no-measured-finnish-cigarette.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

@@ -5,6 +5,7 @@ import {
   Page,
   Frame,
   BlockStack,
+  Text,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -18,6 +19,7 @@ import { KartaUstawienBody } from "../components/KartaUstawienBody";
 import { PodgladSKU } from "../components/PodgladSKU";
 import { PodgladProduktow } from "../components/PodgladProduktow";
 import { KartaKinetycznegoUkladu } from "../components/KartaKinetycznegoUkladu";
+import { KartaOnboarding } from "../components/KartaOnboarding";
 
 
 // Typy dla danych produktów
@@ -220,16 +222,38 @@ export default function Index() {
   // Nowy stan: wybrane warianty
   const [selectedVariantIds, setSelectedVariantIds] = useState<string[]>([]);
 
+  // Stan dla onboarding
+  const [showOnboarding, setShowOnboarding] = useState(
+    typeof window !== 'undefined' ? !localStorage.getItem('dc-sku-onboarding-completed') : false
+  );
+
   const aktualizujZasady = (noweZasady: Partial<ZasadyGeneratora>) => {
     setZasady((prev: ZasadyGeneratora) => ({ ...prev, ...noweZasady }));
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dc-sku-onboarding-completed', 'true');
+    }
   };
 
   return (
     <Frame>
       <Page fullWidth>
-        <TitleBar title="SKU Generator" />
+        <TitleBar title="DC SKU Generator">
+          <button onClick={() => setShowOnboarding(true)}>
+            Guide
+          </button>
+        </TitleBar>
         <div className={styles.layoutContainer}>
           <div className={styles.mainContent}>
+            {showOnboarding && (
+              <div style={{ marginBottom: '24px' }}>
+                <KartaOnboarding onDismiss={handleOnboardingComplete} />
+              </div>
+            )}
+
             <div className={styles.gridCards}>
               <BlockStack gap="400">
                 <KartaPodstawowychZasad zasady={zasady} aktualizuj={aktualizujZasady} />
