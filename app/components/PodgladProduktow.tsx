@@ -187,6 +187,20 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
     };
 
     const allVariantIds = displayVariants.map(v => v.id);
+
+    // Synchronizacja: usuń zaznaczenia dla wariantów, które już nie istnieją
+    useEffect(() => {
+        const validSelectedIds = selectedVariantIds.filter(id => allVariantIds.includes(id));
+        if (validSelectedIds.length !== selectedVariantIds.length) {
+            console.log('Cleaning up selectedVariantIds:', {
+                before: selectedVariantIds.length,
+                after: validSelectedIds.length,
+                removed: selectedVariantIds.filter(id => !allVariantIds.includes(id))
+            });
+            setSelectedVariantIds(validSelectedIds);
+        }
+    }, [allVariantIds, selectedVariantIds, setSelectedVariantIds]);
+
     const allItemsSelected = allVariantIds.length > 0 && selectedVariantIds.length === allVariantIds.length;
     const someItemsSelected = selectedVariantIds.length > 0 && !allItemsSelected;
 
@@ -249,7 +263,15 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         }
 
         // Usuń także zaznaczenia dla usuniętych wariantów
-        setSelectedVariantIds(prev => prev.filter(id => !removedVariantIds.includes(id)));
+        setSelectedVariantIds(prev => {
+            const newSelected = prev.filter(id => !removedVariantIds.includes(id));
+            console.log('Updated selectedVariantIds after product removal:', {
+                removed: removedVariantIds,
+                before: prev.length,
+                after: newSelected.length
+            });
+            return newSelected;
+        });
 
         setShowToast(true);
         setToastMessage("Product removed from selection");
@@ -273,7 +295,15 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
         }
 
         // Zawsze usuń zaznaczenie dla usuniętego wariantu
-        setSelectedVariantIds(prev => prev.filter(id => id !== variantId));
+        setSelectedVariantIds(prev => {
+            const newSelected = prev.filter(id => id !== variantId);
+            console.log('Updated selectedVariantIds after variant removal:', {
+                removedVariant: variantId,
+                before: prev.length,
+                after: newSelected.length
+            });
+            return newSelected;
+        });
 
         setShowToast(true);
         setToastMessage("Variant removed from selection");
@@ -311,7 +341,7 @@ export function PodgladProduktow({ zasady, products, selectedVariantIds, setSele
                                     Product Preview
                                 </Text>
                                 <Text as="p" variant="bodySm" tone="subdued">
-                                    {`${selectedVariantIds.length} of ${allVariantIds.length} variants selected`}
+                                    {`${selectedVariantIds.filter(id => allVariantIds.includes(id)).length} of ${allVariantIds.length} variants selected`}
                                 </Text>
                             </BlockStack>
                             <InlineStack gap="200">
