@@ -23,6 +23,7 @@ import {
   type GetSpecificProductsResponse,
   transformProductsToVariants,
   buildProductIdsQuery,
+  fetchAllProductsPaginated,
 } from "../graphql";
 
 // Import naszych komponentów
@@ -45,21 +46,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   switch (scope) {
     case 'all':
-      // Pobierz wszystkie produkty
-      const allProductsResponse = await admin.graphql(GET_ALL_PRODUCTS);
-      const allProductsData = await allProductsResponse.json() as GetAllProductsResponse;
-      products = transformProductsToVariants(allProductsData.data.products.nodes);
+      // Pobierz wszystkie produkty z paginacją
+      products = await fetchAllProductsPaginated(admin, GET_ALL_PRODUCTS);
       break;
 
     case 'products':
-      // Pobierz konkretne produkty po ID
+      // Pobierz konkretne produkty po ID z paginacją
       if (ids.length > 0) {
         const query = buildProductIdsQuery(ids);
-        const specificProductsResponse = await admin.graphql(GET_SPECIFIC_PRODUCTS, {
-          variables: { query }
-        });
-        const specificProductsData = await specificProductsResponse.json() as GetSpecificProductsResponse;
-        products = transformProductsToVariants(specificProductsData.data.products.nodes);
+        products = await fetchAllProductsPaginated(admin, GET_SPECIFIC_PRODUCTS, { query });
       }
       break;
 

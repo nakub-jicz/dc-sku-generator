@@ -1,6 +1,10 @@
 export const GET_ALL_PRODUCTS = `#graphql
-  query GetAllProducts {
-    products(first: 10) {
+  query GetAllProducts($first: Int!, $after: String) {
+    products(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         title
@@ -34,8 +38,12 @@ export const GET_ALL_PRODUCTS = `#graphql
 `;
 
 export const GET_SPECIFIC_PRODUCTS = `#graphql
-  query GetSpecificProducts($query: String!) {
-    products(first: 10, query: $query) {
+  query GetSpecificProducts($query: String!, $first: Int!, $after: String) {
+    products(first: $first, after: $after, query: $query) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         title

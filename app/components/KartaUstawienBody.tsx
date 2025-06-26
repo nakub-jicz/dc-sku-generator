@@ -78,21 +78,25 @@ export function KartaUstawienBody({ zasady, aktualizuj }: KartaUstawienBodyProps
                         Set the minimum and maximum values for random number generation
                     </Text>
                     <InlineStack gap="400" align="center">
-                        <TextField
-                            label="From"
-                            type="number"
-                            value={zasady.randomMin.toString()}
-                            onChange={(value) => aktualizuj({ randomMin: parseInt(value) || 1 })}
-                            autoComplete="off"
-                        />
+                        <div style={{ width: '120px' }}>
+                            <TextField
+                                label="From"
+                                type="number"
+                                value={zasady.randomMin.toString()}
+                                onChange={(value) => aktualizuj({ randomMin: parseInt(value) || 1 })}
+                                autoComplete="off"
+                            />
+                        </div>
                         <Text variant="bodyMd" as="p" tone="subdued">to</Text>
-                        <TextField
-                            label="To"
-                            type="number"
-                            value={zasady.randomMax.toString()}
-                            onChange={(value) => aktualizuj({ randomMax: parseInt(value) || 99999 })}
-                            autoComplete="off"
-                        />
+                        <div style={{ width: '120px' }}>
+                            <TextField
+                                label="To"
+                                type="number"
+                                value={zasady.randomMax.toString()}
+                                onChange={(value) => aktualizuj({ randomMax: parseInt(value) || 99999 })}
+                                autoComplete="off"
+                            />
+                        </div>
                     </InlineStack>
                     <Text variant="bodySm" as="p" tone="subdued">
                         Example range: {zasady.randomMin.toLocaleString()} - {zasady.randomMax.toLocaleString()} ({(zasady.randomMax - zasady.randomMin + 1).toLocaleString()} possible numbers)

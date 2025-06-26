@@ -57,6 +57,10 @@ export interface GraphQLProduct {
 export interface GetAllProductsResponse {
     data: {
         products: {
+            pageInfo: {
+                hasNextPage: boolean;
+                endCursor: string | null;
+            };
             nodes: GraphQLProduct[];
         };
     };
@@ -65,6 +69,10 @@ export interface GetAllProductsResponse {
 export interface GetSpecificProductsResponse {
     data: {
         products: {
+            pageInfo: {
+                hasNextPage: boolean;
+                endCursor: string | null;
+            };
             nodes: GraphQLProduct[];
         };
     };
