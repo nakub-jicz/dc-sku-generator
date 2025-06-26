@@ -104,7 +104,7 @@ export default function Index() {
   const [zasady, setZasady] = useState<ZasadyGeneratora>({
     prefix: "SKU",
     poczatekNumeracji: 1,
-    sufix: "",
+    sufix: "END",
     typBody: TypBody.KOLEJNY_NUMER,
     separator: "-",
     customSeparator: "",
@@ -158,21 +158,21 @@ export default function Index() {
                 <KartaUstawienBody zasady={zasady} aktualizuj={aktualizujZasady} />
               </BlockStack>
               <div className={styles.gridColumnSticky}>
-                <PodgladProduktow
-                  zasady={zasady}
-                  products={products}
-                  selectedVariantIds={selectedVariantIds}
-                  setSelectedVariantIds={setSelectedVariantIds}
-                  scope={scope}
-                />
+                <BlockStack gap="400">
+                  <PodgladSKU zasady={zasady} />
+                  <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
+                </BlockStack>
               </div>
             </div>
           </div>
           <div className={styles.sidebar}>
-            <BlockStack gap="400">
-              <PodgladSKU zasady={zasady} />
-              <KartaKinetycznegoUkladu zasady={zasady} aktualizuj={aktualizujZasady} />
-            </BlockStack>
+            <PodgladProduktow
+              zasady={zasady}
+              products={products}
+              selectedVariantIds={selectedVariantIds}
+              setSelectedVariantIds={setSelectedVariantIds}
+              scope={scope}
+            />
           </div>
         </div>
       </Page>

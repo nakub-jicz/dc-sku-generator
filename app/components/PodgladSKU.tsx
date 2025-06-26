@@ -152,66 +152,35 @@ export function PodgladSKU({ zasady }: PodgladSKUProps) {
                     </Card>
                 </BlockStack>
 
-                {/* SKU Structure Breakdown */}
-                {czesciSKU.length > 0 && (
-                    <>
-                        <Divider />
-                        <BlockStack gap="300">
-                            <Text variant="bodyMd" as="p" fontWeight="semibold">
-                                Structure breakdown:
-                            </Text>
-                            <BlockStack gap="200">
-                                {czesciSKU.map((czesc, index) => (
-                                    <div key={czesc.id}>
-                                        <InlineStack gap="200" align="center">
-                                            <Badge tone={czesc.typBadge} size="small">
-                                                {czesc.opis}
-                                            </Badge>
-                                            <span style={{
-                                                fontFamily: 'monospace',
-                                                fontWeight: '500',
-                                                fontSize: 'var(--p-font-size-300)'
-                                            }}>
-                                                {czesc.wartosc}
-                                            </span>
-                                        </InlineStack>
-                                        {index < czesciSKU.length - 1 && zasady.separator && (
-                                            <div style={{
-                                                textAlign: 'center',
-                                                margin: '0.5rem 0',
-                                                color: 'var(--p-text-subdued)',
-                                                fontSize: '0.875rem'
-                                            }}>
-                                                {zasady.separator}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </BlockStack>
-                        </BlockStack>
-                    </>
-                )}
-
                 {/* Configuration Summary */}
                 <Divider />
                 <BlockStack gap="200">
                     <Text variant="bodyMd" as="p" fontWeight="semibold">
                         Configuration:
                     </Text>
-                    <InlineStack gap="200" wrap>
+                    <InlineStack gap="200" wrap align="center">
                         <Badge tone="info" size="small">
                             {`Separator: "${zasady.separator}"`}
                         </Badge>
-                        {zasady.prefix && (
-                            <Badge tone="success" size="small">
-                                {`Prefix: "${zasady.prefix}"`}
-                            </Badge>
-                        )}
-                        {zasady.sufix && (
-                            <Badge tone="success" size="small">
-                                {`Suffix: "${zasady.sufix}"`}
-                            </Badge>
-                        )}
+                        {zasady.separator && <Text variant="bodyMd" as="span" tone="subdued">{zasady.separator}</Text>}
+
+                        {/* Wyświetl komponenty w kolejności z ukladSKU */}
+                        {zasady.ukladSKU.map((elementId, index) => {
+                            const element = getWartoscById(elementId);
+                            if (!element.wartosc) return null;
+
+                            return (
+                                <div key={elementId} style={{ display: 'contents' }}>
+                                    <Badge tone={element.typBadge} size="small">
+                                        {`${element.opis}: "${element.wartosc}"`}
+                                    </Badge>
+                                    {index < zasady.ukladSKU.length - 1 && zasady.separator && (
+                                        <Text variant="bodyMd" as="span" tone="subdued">{zasady.separator}</Text>
+                                    )}
+                                </div>
+                            );
+                        })}
+
                         {zasady.uzyjNumeracjiZZerami && (
                             <Badge tone="info" size="small">
                                 {`Zero-padded: ${zasady.iloscCyfrWNumeracji} digits`}

@@ -32,11 +32,13 @@ export interface GraphQLProduct {
     title: string;
     vendor: string;
     productType: string;
-    images: {
+    media: {
         nodes: Array<{
             id: string;
-            url: string;
-            altText: string;
+            image: {
+                url: string;
+                altText: string;
+            };
         }>;
     };
     variants: {

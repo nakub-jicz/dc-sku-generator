@@ -6,11 +6,15 @@ export const GET_ALL_PRODUCTS = `#graphql
         title
         vendor
         productType
-        images(first: 1) {
+        media(first: 1) {
           nodes {
-            id
-            url
-            altText
+            ... on MediaImage {
+              id
+              image {
+                url
+                altText
+              }
+            }
           }
         }
         variants(first: 50) {
@@ -37,11 +41,15 @@ export const GET_SPECIFIC_PRODUCTS = `#graphql
         title
         vendor
         productType
-        images(first: 1) {
+        media(first: 1) {
           nodes {
-            id
-            url
-            altText
+            ... on MediaImage {
+              id
+              image {
+                url
+                altText
+              }
+            }
           }
         }
         variants(first: 50) {

@@ -14,7 +14,11 @@ export function transformProductsToVariants(products: GraphQLProduct[]): Product
                 title: product.title,
                 vendor: product.vendor,
                 productType: product.productType,
-                images: product.images.nodes,
+                images: product.media.nodes.map(node => ({
+                    id: node.id,
+                    url: node.image.url,
+                    altText: node.image.altText,
+                })),
             },
             selectedOptions: variant.selectedOptions,
         }))
