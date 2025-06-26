@@ -13,6 +13,18 @@ import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 import { TypBody } from "../types/ZasadyGeneratora";
 import styles from "./_index/styles.module.css";
 
+// Import GraphQL
+import {
+  GET_ALL_PRODUCTS,
+  GET_SPECIFIC_PRODUCTS,
+  type LoaderData,
+  type ProductVariant,
+  type GetAllProductsResponse,
+  type GetSpecificProductsResponse,
+  transformProductsToVariants,
+  buildProductIdsQuery,
+} from "../graphql";
+
 // Import naszych komponentów
 import { KartaPodstawowychZasad } from "../components/KartaPodstawowychZasad";
 import { KartaUstawienBody } from "../components/KartaUstawienBody";
@@ -20,35 +32,6 @@ import { PodgladSKU } from "../components/PodgladSKU";
 import { PodgladProduktow } from "../components/PodgladProduktow";
 import { KartaKinetycznegoUkladu } from "../components/KartaKinetycznegoUkladu";
 import { KartaOnboarding } from "../components/KartaOnboarding";
-
-
-// Typy dla danych produktów
-interface ProductVariant {
-  id: string;
-  title: string;
-  sku: string | null;
-  product: {
-    id: string;
-    title: string;
-    vendor: string;
-    productType: string;
-    images: Array<{
-      id: string;
-      url: string;
-      altText: string;
-    }>;
-  };
-  selectedOptions: Array<{
-    name: string;
-    value: string;
-  }>;
-}
-
-interface LoaderData {
-  products: ProductVariant[];
-  scope: string;
-  ids?: string[];
-}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -63,107 +46,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   switch (scope) {
     case 'all':
       // Pobierz wszystkie produkty
-      const allProductsResponse = await admin.graphql(
-        `#graphql
-          query GetAllProducts {
-            products(first: 10) {
-              nodes {
-                id
-                title
-                vendor
-                productType
-                images(first: 1) {
-                  nodes {
-                    id
-                    url
-                    altText
-                  }
-                }
-                variants(first: 50) {
-                  nodes {
-                    id
-                    title
-                    sku
-                    selectedOptions {
-                      name
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }`
-      );
-
-      const allProductsData = await allProductsResponse.json();
-      products = allProductsData.data.products.nodes.flatMap((product: any) =>
-        product.variants.nodes.map((variant: any) => ({
-          id: variant.id,
-          title: variant.title,
-          sku: variant.sku,
-          product: {
-            id: product.id,
-            title: product.title,
-            vendor: product.vendor,
-            productType: product.productType,
-            images: product.images.nodes,
-          },
-          selectedOptions: variant.selectedOptions,
-        }))
-      );
+      const allProductsResponse = await admin.graphql(GET_ALL_PRODUCTS);
+      const allProductsData = await allProductsResponse.json() as GetAllProductsResponse;
+      products = transformProductsToVariants(allProductsData.data.products.nodes);
       break;
 
     case 'products':
       // Pobierz konkretne produkty po ID
       if (ids.length > 0) {
-        const specificProductsResponse = await admin.graphql(
-          `#graphql
-            query GetSpecificProducts {
-              products(first: 10, query: "id:(${ids.join(' OR id:')})") {
-                nodes {
-                  id
-                  title
-                  vendor
-                  productType
-                  images(first: 1) {
-                    nodes {
-                      id
-                      url
-                      altText
-                    }
-                  }
-                  variants(first: 50) {
-                    nodes {
-                      id
-                      title
-                      sku
-                      selectedOptions {
-                        name
-                        value
-                      }
-                    }
-                  }
-                }
-              }
-            }`
-        );
-
-        const specificProductsData = await specificProductsResponse.json();
-        products = specificProductsData.data.products.nodes.flatMap((product: any) =>
-          product.variants.nodes.map((variant: any) => ({
-            id: variant.id,
-            title: variant.title,
-            sku: variant.sku,
-            product: {
-              id: product.id,
-              title: product.title,
-              vendor: product.vendor,
-              productType: product.productType,
-              images: product.images.nodes,
-            },
-            selectedOptions: variant.selectedOptions,
-          }))
-        );
+        const query = buildProductIdsQuery(ids);
+        const specificProductsResponse = await admin.graphql(GET_SPECIFIC_PRODUCTS, {
+          variables: { query }
+        });
+        const specificProductsData = await specificProductsResponse.json() as GetSpecificProductsResponse;
+        products = transformProductsToVariants(specificProductsData.data.products.nodes);
       }
       break;
 
