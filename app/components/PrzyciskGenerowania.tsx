@@ -5,6 +5,7 @@ import type { ZasadyGeneratora } from "../types/ZasadyGeneratora";
 interface PrzyciskGenerowaniaProps {
     zasady: ZasadyGeneratora;
     onGeneruj: () => void;
+    selectedCount: number;
     isLoading?: boolean;
 }
 
@@ -17,12 +18,14 @@ interface PrzyciskGenerowaniaProps {
  * TAKTYKA: Przycisk jest aktywny tylko gdy konfiguracja jest kompletna.
  * Pokazujemy podsumowanie tego, co zostanie wygenerowane.
  */
-export function PrzyciskGenerowania({ zasady, onGeneruj, isLoading = false }: PrzyciskGenerowaniaProps) {
+export function PrzyciskGenerowania({ zasady, onGeneruj, selectedCount, isLoading = false }: PrzyciskGenerowaniaProps) {
     // Sprawdzamy czy konfiguracja jest kompletna
     const czyKonfiguracjaKompletna = zasady.prefix || zasady.sufix || zasady.typBody !== "disable_body";
 
-    // Liczba produktów do wygenerowania (na razie przykładowa)
-    const liczbaProduktow = 5; // W przyszłości będzie pobierana z API
+    // Określamy czy użyć bulk operations
+    const shouldUseBulk = selectedCount > 10;
+    const buttonPrefix = shouldUseBulk ? "Bulk " : "";
+    const metodaInfo = shouldUseBulk ? " (Bulk API)" : " (Standard API)";
 
     return (
         <Card>
@@ -43,9 +46,9 @@ export function PrzyciskGenerowania({ zasady, onGeneruj, isLoading = false }: Pr
                             icon={PlayIcon}
                             onClick={onGeneruj}
                             loading={isLoading}
-                            disabled={!czyKonfiguracjaKompletna || isLoading}
+                            disabled={!czyKonfiguracjaKompletna || isLoading || selectedCount === 0}
                         >
-                            {isLoading ? "Generowanie..." : `Wygeneruj ${liczbaProduktow} produktów`}
+                            {isLoading ? "Generowanie..." : `${buttonPrefix}Generate SKU (${selectedCount})`}
                         </Button>
 
                         {!czyKonfiguracjaKompletna && (
@@ -55,10 +58,10 @@ export function PrzyciskGenerowania({ zasady, onGeneruj, isLoading = false }: Pr
                         )}
                     </InlineStack>
 
-                    {czyKonfiguracjaKompletna && (
+                    {czyKonfiguracjaKompletna && selectedCount > 0 && (
                         <Text variant="bodyMd" as="p" tone="subdued">
-                            Zostanie wygenerowanych {liczbaProduktow} produktów z unikalnymi SKU
-                            zgodnie z Twoją konfiguracją. Każdy produkt będzie miał różne opcje wariantów.
+                            Zostanie zaktualizowanych {selectedCount} wariantów z nowymi SKU{metodaInfo}.
+                            {shouldUseBulk && " Bulk operations są używane dla większych operacji."}
                         </Text>
                     )}
                 </BlockStack>

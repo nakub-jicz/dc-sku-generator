@@ -1,23 +1,6 @@
 import type { ZasadyGeneratora, DodatkowyKomponent } from "../types/ZasadyGeneratora";
 import { TypBody, DodatkowyKomponentTyp } from "../types/ZasadyGeneratora";
-
-// Typ dla wariantu produktu - na razie uproszczony
-// W przyszłości będzie pochodził z typów GraphQL
-interface ProductVariant {
-    id: string;
-    title: string;
-    sku: string | null;
-    product: {
-        id: string;
-        title: string;
-        vendor: string;
-        productType: string;
-    };
-    selectedOptions: Array<{
-        name: string;
-        value: string;
-    }>;
-}
+import type { ProductVariant } from "../graphql/types";
 
 /**
  * Generuje pojedyncze SKU na podstawie zasad i danych wariantu.
