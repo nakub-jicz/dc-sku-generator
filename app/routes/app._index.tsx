@@ -80,58 +80,66 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
   const formData = await request.formData();
-  const zasadyJson = formData.get("zasady") as string;
-  const wariantyJson = formData.get("warianty") as string;
+  const zasadyStr = formData.get("zasady") as string;
+  const wariantyStr = formData.get("warianty") as string;
 
-  if (!zasadyJson || !wariantyJson) {
+  if (!zasadyStr || !wariantyStr) {
     return json({
       success: false,
-      error: "Missing required data"
+      error: "Missing zasady or warianty data"
     }, { status: 400 });
   }
 
   try {
-    const zasady: ZasadyGeneratora = JSON.parse(zasadyJson);
-    const warianty: ProductVariant[] = JSON.parse(wariantyJson);
+    const zasady = JSON.parse(zasadyStr) as ZasadyGeneratora;
+    const warianty = JSON.parse(wariantyStr) as ProductVariant[];
+    console.log("Processing SKU update for", warianty.length, "variants");
 
-    if (!warianty || warianty.length === 0) {
-      return json({
-        success: false,
-        error: "No variants selected for SKU generation"
-      }, { status: 400 });
-    }
+    // Tworzymy mapę globalnych indeksów dla wszystkich wariantów
+    const globalVariantIndex = new Map<string, number>();
+    warianty.forEach((variant: ProductVariant, index: number) => {
+      globalVariantIndex.set(variant.id, index);
+    });
 
     // Grupujemy warianty według produktu
-    const variantsByProduct = warianty.reduce((acc, variant) => {
+    const variantsByProduct = warianty.reduce((acc: Record<string, { product: ProductVariant["product"], variants: ProductVariant[] }>, variant: ProductVariant) => {
       const productId = variant.product.id;
       if (!acc[productId]) {
-        acc[productId] = [];
+        acc[productId] = {
+          product: variant.product,
+          variants: []
+        };
       }
-      acc[productId].push(variant);
+      acc[productId].variants.push(variant);
       return acc;
-    }, {} as Record<string, ProductVariant[]>);
+    }, {} as Record<string, { product: ProductVariant["product"], variants: ProductVariant[] }>);
 
     let updatedProductsCount = 0;
     let updatedVariantsCount = 0;
     const errors: string[] = [];
 
     // Przetwarzamy każdy produkt osobno
-    for (const [productId, variants] of Object.entries(variantsByProduct)) {
+    for (const [productId, { product, variants }] of Object.entries(variantsByProduct)) {
       try {
         // Sprawdzamy czy to jest produkt z jedną opcją (single-option)
         const isSingleOption = variants.length === 1 &&
           (variants[0].selectedOptions.length === 0 ||
             (variants[0].selectedOptions.length === 1 && variants[0].selectedOptions[0].name === "Title"));
 
-        // Generujemy nowe SKU dla każdego wariantu z właściwymi optionValues
-        const variantsWithNewSku = variants.map((variant, index) => {
+        // Generujemy nowe SKU dla każdego wariantu z właściwymi optionValues - POPRAWKA: używamy globalnego indeksu
+        const variantsWithNewSku = variants.map((variant) => {
+          // Pobieramy globalny indeks tego wariantu
+          const globalIndex = globalVariantIndex.get(variant.id) || 0;
+
           let optionValues: Array<{ name: string; optionName: string }>;
 
           if (isSingleOption) {
             // Dla produktów z jedną opcją używamy "Title" i "Default Title"
+            // POPRAWKA: używamy name i optionName zamiast name i value
             optionValues = [{ name: "Default Title", optionName: "Title" }];
           } else {
             // Dla produktów z wieloma opcjami używamy rzeczywistych opcji
+            // POPRAWKA: używamy name i optionName zamiast name i value
             optionValues = variant.selectedOptions.map(option => ({
               name: option.value,
               optionName: option.name
@@ -140,7 +148,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
           return {
             id: variant.id,
-            sku: generujPojedynczeSKU(zasady, variant, index),
+            sku: generujPojedynczeSKU(zasady, variant, globalIndex),
             optionValues: optionValues
           };
         });

@@ -28,6 +28,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             }, { status: 400 });
         }
 
+        // Tworzymy mapę globalnych indeksów dla wszystkich wariantów
+        const globalVariantIndex = new Map<string, number>();
+        warianty.forEach((variant, index) => {
+            globalVariantIndex.set(variant.id, index);
+        });
+
         // Grupujemy warianty według produktu dla optymalizacji mutacji
         const variantsByProduct = warianty.reduce((acc, variant) => {
             const productId = variant.product.id;
@@ -58,8 +64,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                     (variants[0].selectedOptions.length === 0 ||
                         (variants[0].selectedOptions.length === 1 && variants[0].selectedOptions[0].name === "Title"));
 
-                // Generujemy nowe SKU dla każdego wariantu z właściwymi optionValues
-                const variantsWithNewSku = variants.map((variant, index) => {
+                // Generujemy nowe SKU dla każdego wariantu z właściwymi optionValues - POPRAWKA: używamy globalnego indeksu
+                const variantsWithNewSku = variants.map((variant) => {
+                    // Pobieramy globalny indeks tego wariantu
+                    const globalIndex = globalVariantIndex.get(variant.id) || 0;
+
                     let optionValues: Array<{ name: string; optionName: string }>;
 
                     if (isSingleOption) {
@@ -75,7 +84,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
                     return {
                         id: variant.id,
-                        sku: generujPojedynczeSKU(zasady, variant, index),
+                        sku: generujPojedynczeSKU(zasady, variant, globalIndex),
                         optionValues: optionValues
                     };
                 });

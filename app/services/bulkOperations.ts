@@ -37,6 +37,12 @@ export function generateBulkUpdateJSONL(
     zasady: ZasadyGeneratora,
     warianty: ProductVariant[]
 ): string {
+    // Tworzymy mapę globalnych indeksów dla wszystkich wariantów
+    const globalVariantIndex = new Map<string, number>();
+    warianty.forEach((variant, index) => {
+        globalVariantIndex.set(variant.id, index);
+    });
+
     // Grupujemy warianty według produktu
     const variantsByProduct = warianty.reduce((acc, variant) => {
         const productId = variant.product.id;
@@ -86,8 +92,11 @@ export function generateBulkUpdateJSONL(
             }));
         }
 
-        // Generujemy warianty z nowymi SKU
-        const variantsInput = variants.map((variant, index) => {
+        // Generujemy warianty z nowymi SKU - POPRAWKA: używamy globalnego indeksu
+        const variantsInput = variants.map((variant) => {
+            // Pobieramy globalny indeks tego wariantu
+            const globalIndex = globalVariantIndex.get(variant.id) || 0;
+
             let optionValues: Array<{ name: string; optionName: string }>;
 
             if (isSingleOption) {
@@ -105,7 +114,7 @@ export function generateBulkUpdateJSONL(
 
             return {
                 id: variant.id,
-                sku: generujPojedynczeSKU(zasady, variant, index),
+                sku: generujPojedynczeSKU(zasady, variant, globalIndex),
                 optionValues: optionValues
             };
         });
